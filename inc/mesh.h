@@ -106,7 +106,7 @@ namespace gluk
 	public:
 		mesh(const string& n);
 		proprw(string, name, { return _name; });
-		virtual void draw(device* _dev, prim_draw_type dt = prim_draw_type::triangle_list, 
+		virtual void draw(prim_draw_type dt = prim_draw_type::triangle_list, 
 			int index_offset = 0, int oindex_count = -1, int vertex_offset = 0) = 0;
 		~mesh();
 		propr(GLuint, vertex_array, { return vtx_array; });
@@ -144,8 +144,8 @@ namespace gluk
 			}
 		}
 
-		interleaved_mesh(device* _dev, const sys_mesh<vertex_type,index_type>& gm, const string& nm)
-			: interleaved_mesh(_dev, gm.vertices, gm.indices, nm)
+		interleaved_mesh(const sys_mesh<vertex_type,index_type>& gm, const string& nm)
+			: interleaved_mesh(gm.vertices, gm.indices, nm)
 		{}
 		
 		void draw(prim_draw_type dt = prim_draw_type::triangle_list,
