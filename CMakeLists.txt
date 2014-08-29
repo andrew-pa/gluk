@@ -12,7 +12,8 @@ set(GLOBAL_DEFINES "-DUNICODE -D_UNICODE") #make sure we use unicode
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(GLFW REQUIRED)
-set(GLI_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/libraries/gli-0.5.1.0/gli/)
+set(GLI_PACKAGE_DIR "C:/Users/andre_000/Source/Libraries/gli-0.5.1.0")
+find_package(GLI REQUIRED)
 include_directories(${GLFW_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS} ${GLI_INCLUDE_DIRS})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)

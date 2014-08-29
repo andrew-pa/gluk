@@ -6,7 +6,7 @@ namespace gluk
 	app::app(const string& title, vec2 winsize, uint aa_samples, uvec4 colorbits, uvec2 dsbits, function<void()> apply_window_hints)
 	{
 		if (!glfwInit()) throw exception("GLFW init failed!");
-		glfwWindowHint(GLFW_SAMPLES, aa_samples);
+		if(aa_samples >= 1) glfwWindowHint(GLFW_SAMPLES, aa_samples);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);	
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -45,7 +45,7 @@ namespace gluk
 
 	void app::run()
 	{
-		const float target_delta_time = 1.f / 60.f;
+		const float target_delta_time = 1.f / 120.f;
 
 		timer tm;
 		uint fc = 0;
@@ -57,7 +57,6 @@ namespace gluk
 			dev->update_render_target();
 			render(tm.time(), tm.delta_time());
 			dev->present();
-			glfwSwapBuffers(wnd);
 			fc++;
 			ft += tm.delta_time();
 			if(ft >= 1.f)

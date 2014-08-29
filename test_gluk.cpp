@@ -4,7 +4,7 @@
 #include "shader.h"
 #include "texture.h"
 #include "render_target.h"
-#include "gli.hpp"
+#include <gli/gli.hpp>
 using namespace gluk;
 
 vec4 texture_data[] =
@@ -25,7 +25,7 @@ class test_app : public app
 	mat4 view, proj;
 public:
 	test_app() 
-		: app("test", vec2(640, 480), 16),
+		: app("test", vec2(640, 480), 8),
 		s(read_data_from_package(L"basic.vs.glsl"), read_data_from_package(L"basic.ps.glsl")),
 		tex(gli::texture2D(gli::load_dds("test.dds"))),
 		rtx(uvec2(1024))

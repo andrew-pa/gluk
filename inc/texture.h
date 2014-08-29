@@ -1,6 +1,6 @@
 #pragma once
 #include "cmmn.h"
-#include "gli.hpp"
+#include <gli/gli.hpp>
 
 namespace gluk
 {
