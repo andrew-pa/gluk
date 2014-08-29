@@ -97,11 +97,6 @@ namespace gluk
 		GLenum get_gl_format() const;
 	};
 
-	enum class texture_filter
-	{
-		point, linear, anisotropic
-	};
-
 	enum class texture_dimension : uint
 	{
 		texture_1d = 0,

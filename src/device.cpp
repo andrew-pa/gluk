@@ -70,7 +70,7 @@ namespace gluk
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
-		glClearColor(1.f, .5f, 0.f, 1.f);
+		glClearColor(0.2f, 0.2f, 0.2f, 1.f);
 	}
 
 	void device::resize(vec2 s)

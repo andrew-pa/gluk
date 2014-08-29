@@ -19,7 +19,6 @@ add_definitions(${GLOBAL_DEFINES})
 
 file(GLOB SOURCES src/*.cpp inc/*.h)
 
-add_subdirectory(txcv)
 add_library(gluk ${SOURCES})
 add_executable(test_gluk test_gluk.cpp)
 target_link_libraries(test_gluk gluk ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES})

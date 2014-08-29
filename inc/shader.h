@@ -80,7 +80,7 @@ namespace gluk
 	{
 		static void set(GLint l, const mat2& v)
 		{
-			glUniformMatrix2fv(l, 4, false, &v[0][0]);
+			glUniformMatrix2fv(l, 1, GL_FALSE, &v[0][0]);
 		}
 	};
 	template<>
@@ -88,7 +88,7 @@ namespace gluk
 	{
 		static void set(GLint l, const mat3& v)
 		{
-			glUniformMatrix3fv(l, 9, false, &v[0][0]);
+			glUniformMatrix3fv(l, 1, GL_FALSE, &v[0][0]);
 		}
 	};
 	template<>
@@ -96,7 +96,7 @@ namespace gluk
 	{
 		static void set(GLint l, const mat4& v)
 		{
-			glUniformMatrix4fv(l, 16, false, &v[0][0]);
+			glUniformMatrix4fv(l, 1, GL_FALSE, &v[0][0]);
 		}
 	};
 #pragma endregion

@@ -14,6 +14,7 @@ namespace gluk
 		{
 			last_time = curr_time = glfwGetTime();
 			_deltat = 0;
+			_ctime = 0;
 		}
 
 		void reset()
