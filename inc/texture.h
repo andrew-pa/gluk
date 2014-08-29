@@ -1,5 +1,6 @@
 #pragma once
 #include "cmmn.h"
+#include "gli.hpp"
 
 namespace gluk
 {
@@ -93,6 +94,45 @@ namespace gluk
 			glTexImage2D(GL_TEXTURE_2D, 0, fmt.get_gl_format_internal(), size_.x, size_.y, 0,
 				fmt.get_gl_format(), fmt.get_gl_type(), data);
 			glBindTexture(GL_TEXTURE_2D, 0);
+		}
+
+		texture2d(const gli::texture2D& tex)
+			: texture(tex.dimensions())
+		{
+			glBindTexture(GL_TEXTURE_2D, _txid);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, GLint(tex.levels() - 1));
+			glTexStorage2D(GL_TEXTURE_2D, GLint(tex.levels()),
+				GLenum(gli::internal_format(tex.format())),
+				GLsizei(tex.dimensions().x),
+				GLsizei(tex.dimensions().y));
+
+			if(gli::is_compressed(tex.format()))
+			{
+				for (uint lvl = 0; lvl < tex.levels(); ++lvl)
+				{
+					glCompressedTexSubImage2D(GL_TEXTURE_2D,
+						GLint(lvl), 0, 0,
+						GLsizei(tex[lvl].dimensions().x),
+						GLsizei(tex[lvl].dimensions().y),
+						GLenum(gli::internal_format(tex.format())),
+						GLsizei(tex[lvl].size()),
+						tex[lvl].data());
+				}
+			}
+			else
+			{
+				for (uint lvl = 0; lvl < tex.levels(); ++lvl)
+				{
+					glTexSubImage2D(GL_TEXTURE_2D,
+						GLint(lvl), 0, 0,
+						GLsizei(tex[lvl].dimensions().x),
+						GLsizei(tex[lvl].dimensions().y),
+						GLenum(gli::external_format(tex.format())),
+						GLenum(gli::type_format(tex.format())),
+						tex[lvl].data());
+				}
+			}
 		}
 	};
 }

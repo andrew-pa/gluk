@@ -29,7 +29,7 @@ namespace gluk
 			throw exception("GLFW window creation failed");
 		}
 
-		glfwSwapInterval(60);
+		glfwSwapInterval(1);
 	
 		glfwSetWindowUserPointer(wnd, this);
 
@@ -45,6 +45,8 @@ namespace gluk
 
 	void app::run()
 	{
+		const float target_delta_time = 1.f / 60.f;
+
 		timer tm;
 		uint fc = 0;
 		float ft = 0.f;
@@ -58,7 +60,7 @@ namespace gluk
 			glfwSwapBuffers(wnd);
 			fc++;
 			ft += tm.delta_time();
-			if(ft > 1.f)
+			if(ft >= 1.f)
 			{
 				float fps = (float)fc;
 				float mpf = 1000.f / fps;
@@ -69,6 +71,12 @@ namespace gluk
 				ft = 0.f;
 			}
 			glfwPollEvents();
+			if(tm.delta_time() < target_delta_time)
+			{
+				auto missing_delta = target_delta_time - tm.delta_time();
+				if(missing_delta > 0.f)
+					this_thread::sleep_for(chrono::milliseconds((long)ceil(missing_delta)));
+			}
 		}
 	}
 

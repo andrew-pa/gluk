@@ -89,6 +89,12 @@ namespace gluk
 		return rtsk.top();
 	}
 
+	void device::push_render_target(render_target* rt)
+	{
+		rtsk.push(rt);
+		update_render_target();
+	}
+
 	void device::pop_render_target()
 	{
 		if (rtsk.size() == 1) return;
