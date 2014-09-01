@@ -74,6 +74,7 @@ namespace gluk
 			{
 				ostringstream oss;
 				oss << "GL Program error: " << buf << endl;
+				OutputDebugStringA(oss.str().c_str());
 				throw exception(oss.str().c_str());
 			}
 			glValidateProgram(_id);

@@ -17,6 +17,8 @@ namespace gluk
 		queue<uint> previously_alloced_ubbi;
 		uint alloc_ubbi();
 		void free_ubbi(uint& ubbi);
+		template <typename T>
+		friend class uniform_buffer;
 	public:
 		device(vec2 s_, GLFWwindow* w_, uint aal);
 		~device();

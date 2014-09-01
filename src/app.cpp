@@ -39,6 +39,12 @@ namespace gluk
 			t->dev->resize(vec2(w, h));
 			t->resize();
 		});
+
+		glfwSetKeyCallback(wnd, [](GLFWwindow* wnd, int key, int scancode, int action, int mods) 
+		{
+			auto t = (app*)glfwGetWindowUserPointer(wnd);
+			t->key_down(key, (key_action)action, (key_mod)mods);
+		});
 		
 		dev = new device(winsize, wnd, aa_samples);
 	}
@@ -47,9 +53,9 @@ namespace gluk
 	{
 		const float target_delta_time = 1.f / 120.f;
 
-		timer tm;
 		uint fc = 0;
 		float ft = 0.f;
+		tm.reset();
 		while(!glfwWindowShouldClose(wnd))
 		{
 			tm.update();

@@ -114,7 +114,7 @@ namespace gluk
 				throw exception("Invalid uniform buffer index");
 			glGenBuffers(1, &_buf);
 			glBindBuffer(GL_UNIFORM_BUFFER, _buf);
-			glBufferData(GL_UNIFORM_BUFFER, sizeof(T), nullptr, GL_STREAM_DRAW);
+			glBufferData(GL_UNIFORM_BUFFER, sizeof(T), nullptr, GL_DYNAMIC_DRAW);
 			_gi = dev->alloc_ubbi();
 			glBindBufferRange(GL_UNIFORM_BUFFER, _gi, _buf, 0, sizeof(T));
 			glUniformBlockBinding(pid, _ix, _gi);
@@ -168,9 +168,9 @@ namespace gluk
 
 		template <typename T>
 		//WARNING: This function returns a new UBO each time!
-		uniform_buffer<T>& get_uniform_buffer(device* dev, const string& id)
+		uniform_buffer<T>* get_uniform_buffer(device* dev, const string& id)
 		{
-			return uniform_buffer<T>(dev, _id, glGetUniformBlockIndex(_id, id.c_str()));
+			return new uniform_buffer<T>(dev, _id, glGetUniformBlockIndex(_id, id.c_str()));
 		}
 
 		propr(GLuint, program_id, { return _id; });
