@@ -70,4 +70,84 @@ namespace gluk
 		propr(GLuint, frame_buffer, { return _fbo; })
 		propr(texture2d*, depth_buffer, { return depthtx; })
 	};
+
+	template <int N>
+	class multi_render_texture2d : public gluk::render_target
+	{
+		GLuint _fbo;
+		GLuint _tex[N];
+		texture<2>* _mtex[N];
+		GLuint _dtx;
+		gluk::viewport _vp;
+	public:
+		multi_render_texture2d(gluk::viewport vp,
+			gluk::pixel_format pf = gluk::pixel_format(gluk::pixel_components::rgba, gluk::pixel_type::floatp, 32),
+			gluk::pixel_format dpf = gluk::pixel_format(gluk::pixel_components::depth, gluk::pixel_type::floatp, 32))
+			: _vp(vp)
+		{
+			glGenFramebuffers(1, &_fbo);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo);
+			glGenTextures(N, _tex);
+			glGenTextures(1, &_dtx);
+
+			for (int i = 0; i < N; ++i)
+			{
+				glBindTexture(GL_TEXTURE_2D, _tex[i]);
+				glTexImage2D(GL_TEXTURE_2D, 0, pf.get_gl_format_internal(),
+					vp.size.x, vp.size.y, 0, pf.get_gl_format(), pf.get_gl_type(), nullptr);
+				glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, _tex[i], 0);
+
+				_mtex[i] = new texture<2>(_tex[i], vp.size);
+			}
+
+			glBindTexture(GL_TEXTURE_2D, _dtx);
+			glTexImage2D(GL_TEXTURE_2D, 0, dpf.get_gl_format_internal(), vp.size.x, vp.size.y, 0, dpf.get_gl_format(), dpf.get_gl_type(), nullptr);
+			glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _dtx, 0);
+
+			vector<GLenum> db;
+			for (int i = 0; i < N; ++i) db.push_back(GL_COLOR_ATTACHMENT0 + i);
+			glDrawBuffers(db.size(), db.data());
+
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		}
+
+		void ombind(gluk::device* dev) override
+		{
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo);
+			glViewport(_vp.offset.x, _vp.offset.y,
+				_vp.size.x < 0 ? dev->size().x : _vp.size.x,
+				_vp.size.y < 0 ? dev->size().y : _vp.size.y);
+			glDepthRange(_vp.min_depth < 0 ? 0.f : _vp.min_depth,
+				_vp.max_depth < 0 ? 1.f : _vp.max_depth);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		}
+
+		void bind_for_read()
+		{
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, _fbo);
+		}
+
+		gluk::viewport& mviewport() { return _vp; }
+
+		propr(GLuint, fbo, { return _fbo; });
+		propr(GLuint, depth_texture, { return _dtx; });
+
+		inline GLuint get_gl_texture(int i)
+		{
+			return _tex[i];
+		}
+
+		inline const texture<2>& get_texture(int i)
+		{
+			return *_mtex[i];
+		}
+
+		~multi_render_texture2d()
+		{
+			glDeleteTextures(N, _tex);
+			glDeleteTextures(1, &_dtx);
+			glDeleteFramebuffers(1, &_fbo);
+		}
+	};
 }

@@ -29,6 +29,7 @@ namespace gluk
 		void present();
 		void resize(vec2 ns);
 
+
 		propr(vec2, size, { return _rtsize; })
 	};
 }

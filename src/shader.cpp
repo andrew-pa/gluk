@@ -17,16 +17,10 @@ namespace gluk
 		}
 	}
 
-	static GLuint compile_shader(GLenum type, const datablob<byte>& fdata, const string& defs)
+	static GLuint compile_shader(GLenum type, const datablob<glm::byte>& fdata)
 	{
 		GLuint sh = glCreateShader(type);
 		string vssd = string((char*)fdata.data, fdata.length + (char*)fdata.data);
-		auto tw = vssd.find_first_of("~~~~", 0);
-		if (tw != vssd.npos) 
-		{
-			vssd.replace(tw, 4, "");
-			vssd.insert(tw, defs);
-		}
 		const GLchar* vsd = (GLchar*)vssd.data();
 		const GLint vsl = vssd.size();
 		//OutputDebugStringA(vsd);
@@ -36,24 +30,21 @@ namespace gluk
 		return sh;
 	}
 
-	shader::shader(const datablob<byte>& vs_data, const datablob<byte>& ps_data, const datablob<byte>& gs_data)
+	shader::shader(const datablob<glm::byte>& vs_data, const datablob<glm::byte>& ps_data, const datablob<glm::byte>& gs_data)
 	{
 		if(!vs_data.empty())
 		{
-			_idvp = compile_shader(GL_VERTEX_SHADER, vs_data, "");
+			_idvp = compile_shader(GL_VERTEX_SHADER, vs_data);
 		}
 
 		if (!gs_data.empty())
 		{
-			_idgp = compile_shader(GL_GEOMETRY_SHADER, gs_data, "");
+			_idgp = compile_shader(GL_GEOMETRY_SHADER, gs_data);
 		}
 
 		if(!ps_data.empty())
 		{
-			string defs = "";
-			if (!gs_data.empty()) defs += "#define IN_FROM_GS";
-			else if (!vs_data.empty()) defs += "#define IN_FROM_VS";
-			_idfp = compile_shader(GL_FRAGMENT_SHADER, ps_data, defs);
+			_idfp = compile_shader(GL_FRAGMENT_SHADER, ps_data);
 		}
 
 		_id = glCreateProgram();

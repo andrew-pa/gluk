@@ -2,6 +2,7 @@
 #pragma once
 #include "cmmn.h"
 #include "device.h"
+#include "texture.h"
 
 namespace gluk
 {
@@ -143,8 +144,8 @@ namespace gluk
 		GLuint _id, _idvp, _idfp, _idgp;
 		map<string, GLint> uniform_index_cache;
 	public:
-		shader( const datablob<byte>& vs_data, const datablob<byte>& ps_data = datablob<byte>(),
-			const datablob<byte>& gs_data = datablob<byte>());
+		shader(const datablob<glm::byte>& vs_data, const datablob<glm::byte>& ps_data = datablob<glm::byte>(),
+			const datablob<glm::byte>& gs_data = datablob<glm::byte>());
 		~shader();
 
 		virtual void bind();
@@ -171,6 +172,13 @@ namespace gluk
 		uniform_buffer<T>* get_uniform_buffer(device* dev, const string& id)
 		{
 			return new uniform_buffer<T>(dev, _id, glGetUniformBlockIndex(_id, id.c_str()));
+		}
+
+		template <int Dim>
+		void set_texture(const string& id, const texture<Dim>& tex, int slot)
+		{
+			tex.bind(slot);
+			set_uniform(id, slot);
 		}
 
 		propr(GLuint, program_id, { return _id; });

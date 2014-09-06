@@ -178,8 +178,8 @@ namespace gluk
 
 		m.vertices.push_back(vertex_type(vec3(0.f, radius, 0.f), vec3(0, 1, 0), vec3(1, 0, 0), vec2(0, 0)));
 
-		float dphi = pi / stack_count;
-		float dtheta = 2.f*pi / slice_count;
+		float dphi = pi<float>() / stack_count;
+		float dtheta = 2.f*pi<float>() / slice_count;
 
 		for (uint i = 1; i <= stack_count - 1; ++i)
 		{
@@ -193,7 +193,7 @@ namespace gluk
 				vec3 t = normalize(vec3(-radius*sinf(phi)*sinf(theta),
 					0.f,
 					radius*sinf(phi)*cosf(theta)));
-				m.vertices.push_back(vertex_type(p, normalize(p), t, vec2(theta / (2.f*pi), phi / (2.f*pi))));
+				m.vertices.push_back(vertex_type(p, normalize(p), t, vec2(theta / (2.f*pi<float>()), phi / (2.f*pi<float>()))));
 
 			}
 		}
@@ -332,6 +332,46 @@ namespace gluk
 			}
 		}
 		
+		return m;
+	}
+
+	template <typename vertex_type, typename index_type>
+	sys_mesh<vertex_type, index_type> generate_screen_quad(vec2 offset, vec2 size)
+	{
+		sys_mesh<vertex_type, index_type> m;
+
+		const vec2 z[] =
+		{
+			vec2(1, 1),
+			vec2(1, -1),
+			vec2(-1, -1),
+			vec2(-1, 1),
+		};
+		const vec2 t[] =
+		{
+			vec2(0, 0),
+			vec2(0, 1),
+			vec2(1, 1),
+			vec2(1, 0),
+		};
+
+		m.vertices.push_back(vertex_type(vec3(offset + size*z[0], 0), vec3(0, 1, 0),
+			vec3(1, 0, 0), t[0]));
+		m.vertices.push_back(vertex_type(vec3(offset + size*z[1], 0), vec3(0, 1, 0),
+			vec3(1, 0, 0), t[1]));
+		m.vertices.push_back(vertex_type(vec3(offset + size*z[2], 0), vec3(0, 1, 0),
+			vec3(1, 0, 0), t[2]));
+		m.vertices.push_back(vertex_type(vec3(offset + size*z[3], 0), vec3(0, 1, 0),
+			vec3(1, 0, 0), t[3]));
+
+		m.indices.push_back(0);
+		m.indices.push_back(1);
+		m.indices.push_back(2);
+
+		m.indices.push_back(2);
+		m.indices.push_back(3);
+		m.indices.push_back(0);
+
 		return m;
 	}
 

@@ -44,36 +44,46 @@ namespace gluk
 			glGenTextures(1, &_txid);
 		}
 
-		void bind(int slot)
+		texture(GLuint glid, size_vec_t s)
+			: _size(s), _txid(glid) 
+		{
+		}
+
+		void bind(int slot) const
 		{
 			glActiveTexture(GL_TEXTURE0 + slot);
 			glBindTexture(detail::texture_target_enum_from_dim<Dim>::value, _txid);
 		}
-		void unbind(int slot)
+		void unbind(int slot) const
 		{
 			glActiveTexture(GL_TEXTURE0 + slot);
 			glBindTexture(detail::texture_target_enum_from_dim<Dim>::value, 0);
 		}
 
 		//these functions assume the function is already bound
-		void min_filter(GLenum f)
+		void min_filter(GLenum f) const
 		{
 			glTexParameteri(detail::texture_target_enum_from_dim<Dim>::value, GL_TEXTURE_MIN_FILTER, f);
 		}
-		void mag_filter(GLenum f)
+		void mag_filter(GLenum f) const
 		{
 			glTexParameteri(detail::texture_target_enum_from_dim<Dim>::value, GL_TEXTURE_MAG_FILTER, f);
 		}
-		void ansiotropic_filter(float max_ansio)
+		void ansiotropic_filter(float max_ansio) const
 		{
 			if (!GL_EXT_texture_filter_anisotropic) return;
 			glTexParameterf(detail::texture_target_enum_from_dim<Dim>::value, GL_TEXTURE_MAX_ANISOTROPY_EXT, max_ansio);
 		}
-		void wrap(GLenum S, GLenum T, GLenum R)
+		void wrap(GLenum S, GLenum T, GLenum R) const
 		{
 			glTexParameteri(detail::texture_target_enum_from_dim<Dim>::value, GL_TEXTURE_WRAP_S, S);
 			glTexParameteri(detail::texture_target_enum_from_dim<Dim>::value, GL_TEXTURE_WRAP_T, T);
 			glTexParameteri(detail::texture_target_enum_from_dim<Dim>::value, GL_TEXTURE_WRAP_R, R);
+		}
+
+		operator GLuint()
+		{
+			return _txid;
 		}
 
 		virtual ~texture() 
