@@ -4,7 +4,29 @@
 
 namespace gluk
 {
+	template <typename index_type>
+	struct gl_type_for_index_type
+	{
+		const static GLenum value = GL_INVALID_ENUM;
+	};
 
+	template <>
+	struct gl_type_for_index_type<uint8>
+	{
+		const static GLenum value = GL_UNSIGNED_BYTE;
+	};
+
+	template <>
+	struct gl_type_for_index_type<uint16>
+	{
+		const static GLenum value = GL_UNSIGNED_SHORT;
+	};
+
+	template <>
+	struct gl_type_for_index_type<uint32>
+	{
+		const static GLenum value = GL_UNSIGNED_INT;
+	};
 
 	//vertex_attrib
 	//	represents a vertex attribute, is GL equivalent to D3D11_INPUT_ELEMENT_DESC struct
@@ -105,6 +127,8 @@ namespace gluk
 		string _name;
 	public:
 		mesh(const string& n);
+		mesh(const string& n, GLuint vtxa)
+			: _name(n), vtx_array(vtxa) {}
 		proprw(string, name, { return _name; });
 		virtual void draw(prim_draw_type dt = prim_draw_type::triangle_list, 
 			int index_offset = 0, int oindex_count = -1, int vertex_offset = 0) = 0;
@@ -144,6 +168,11 @@ namespace gluk
 			}
 		}
 
+		interleaved_mesh(uint vc, uint ic, const string& n, GLuint vb, GLuint ib, GLuint var)
+			: mesh(n, var), idx_cnt(ic), vtx_cnt(vc), vtx_buf(vb), idx_buf(ib)
+		{
+		}
+
 		interleaved_mesh(const sys_mesh<vertex_type,index_type>& gm, const string& nm)
 			: interleaved_mesh(gm.vertices, gm.indices, nm)
 		{}
@@ -153,8 +182,8 @@ namespace gluk
 		{
 			glBindVertexArray(vtx_array);			
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idx_buf);
-			glDrawElements((GLenum)dt, (oindex_count == -1 ? idx_cnt : oindex_count),
-				GL_UNSIGNED_SHORT, (void*)0); //TODO: Change GL_UNSIGNED_SHORT to whatever the appropriate GL_* const is for the index_type
+			glDrawRangeElementsBaseVertex((GLenum)dt, index_offset, (oindex_count == -1 ? idx_cnt : oindex_count), (oindex_count == -1 ? idx_cnt : oindex_count),
+				gl_type_for_index_type<index_type>::value, (void*)0, vertex_offset); //TODO: Change GL_UNSIGNED_SHORT to whatever the appropriate GL_* const is for the index_type
 		}
 		
 		~interleaved_mesh()
@@ -169,6 +198,225 @@ namespace gluk
 		propr(GLuint, vertex_buffer, { return vtx_buf; });
 		propr(GLuint, index_buffer, { return idx_buf; });
 
+	};
+
+	class model
+	{
+	protected:
+
+		string _name;
+	public:
+		model(const string& n)
+			: _name(n) 
+		{
+		}
+		
+		proprw(string, name, { return _name; });
+		virtual void draw(function<void(uint, const mat4& m)> update_shader =
+			function<void(uint, const mat4& m)>([&](uint, const mat4&){}), const mat4& world = mat4(1),
+			prim_draw_type pdt = prim_draw_type::triangle_list) = 0;
+		
+		~model()
+		{
+		}
+		
+
+	};
+
+	//TODO: This class is bad, bad, bad! Performance should be terrible. At some point, this should be removed in favor of the now broken shared_data_model
+	template <typename vertex_type, typename index_type>
+	class simple_model : public model
+	{
+		struct model_part;
+		vector<model_part> parts;
+	public:
+		struct sysmodel_part
+		{
+			sys_mesh<vertex_type, index_type> mesh;
+			mat4 world;
+			string name;
+			sysmodel_part(const sys_mesh<vertex_type, index_type>& m, mat4 w, string n)
+				: mesh(m), world(w), name(n) {}
+		};
+		struct model_part
+		{
+			GLuint vao;
+			GLuint vbo;
+			GLuint ibo;
+			uint index_count;
+			string name;
+			mat4 world;
+
+			model_part() {}
+
+			model_part(GLuint vao, GLuint v, GLuint i, uint ic, const string& n, const mat4& m)
+				: vbo(v), ibo(i), index_count(ic), name(n), world(m) {}
+			
+			model_part(const sysmodel_part& p)
+				: world(p.world), name(p.name), index_count(p.mesh.indices.size())
+			{
+				glGenVertexArrays(1, &vao);
+				glBindVertexArray(vao);
+
+				glGenBuffers(1, &vbo);
+				glBindBuffer(GL_ARRAY_BUFFER, vbo);
+				glBufferData(GL_ARRAY_BUFFER, p.mesh.vertices.size()*sizeof(vertex_type), p.mesh.vertices.data(), GL_STATIC_DRAW);
+
+				glGenBuffers(1, &ibo);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+				glBufferData(GL_ELEMENT_ARRAY_BUFFER, p.mesh.indices.size()*sizeof(index_type), p.mesh.indices.data(), GL_STATIC_DRAW);
+				
+				auto vabs = vertex_type::get_vertex_attribs();
+				for (const auto& v : vabs)
+				{
+					glEnableVertexAttribArray(v.idx);
+					glVertexAttribPointer(v.idx, v.count, v.type, GL_FALSE, sizeof(vertex_type), (void*)v.offset);
+				}
+			}
+
+			~model_part()
+			{
+				//glDeleteBuffers(1, &vbo);
+				//glDeleteBuffers(1, &ibo);
+			//	glDeleteVertexArrays(1, &vao);
+			}
+		};
+
+		model_part& operator[] (uint i)
+		{
+			return parts[i];
+		}
+		const model_part& operator[] (uint i) const
+		{
+			return parts[i];
+		}
+
+		simple_model(vector<sysmodel_part> sparts, string n)
+			: model(n)
+		{
+			for(const auto& p : sparts)
+			{
+				parts.push_back(model_part(p));
+			}
+		}
+
+		void draw(function<void(uint, const mat4& m)> update_shader =
+			function<void(uint, const mat4& m)>([&](uint, const mat4&){}), const mat4& world = mat4(1),
+			prim_draw_type pdt = prim_draw_type::triangle_list) override
+		{
+			for (uint i = 0; i < parts.size(); ++i)
+			{
+				const auto& p = parts[i];
+				glBindVertexArray(p.vao);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, p.ibo);
+				update_shader(i, world*p.world);
+				glDrawElements((GLenum)pdt, p.index_count, gl_type_for_index_type<index_type>::value, (void*)0);
+			}
+		}
+
+		~simple_model()
+		{
+			for(auto& mp : parts)
+			{
+				glDeleteBuffers(1, &mp.vbo);
+				glDeleteBuffers(1, &mp.ibo);
+				glDeleteVertexArrays(1, &mp.vao);
+			}
+		}
+
+	};
+
+	//TODO: Fix this!
+	//TODO: This class is broken, no idea where
+	template <typename vertex_type, typename index_type>
+	class shared_data_model : public model
+	{
+		struct model_part;
+		GLuint vtx_array;
+		GLuint vtx_buf;
+		GLuint idx_buf;
+		vector<model_part> parts;
+	public:
+		struct model_part
+		{
+			uint index_offset;
+			uint index_count;
+			uint vertex_offset;
+			mat4 world;
+			string name;
+			model_part(uint io, uint ic, uint vo, const mat4& w, const string& n = "")
+				: index_offset(io), index_count(ic), vertex_offset(vo), world(w), name(n)  {}
+		};
+
+		struct sys_model_part
+		{
+			sys_mesh<vertex_type, index_type> mesh;
+			mat4 world;
+			string name;
+		};
+
+		model_part& operator[] (int i)
+		{
+			return parts[i];
+		}
+
+		const model_part& operator[] (int i) const
+		{
+			return parts[i];
+		}
+
+		shared_data_model(const vector<sys_model_part>& mss, const string& n)
+			: model(n)
+		{
+			glGenVertexArrays(1, &vtx_array);
+			glBindVertexArray(vtx_array);
+			vector<vertex_type> vs;
+			vector<index_type> is;
+			for(const auto& s : mss)
+			{
+				parts.push_back(model_part(is.size(), s.mesh.indices.size(), vs.size(), s.world, s.name)); //TODO: Get real world mats at init
+				for (const auto& _v : s.mesh.vertices) vs.push_back(_v);	
+				for (const auto& _i : s.mesh.indices) is.push_back(_i);
+			}
+
+			glGenBuffers(1, &vtx_buf);
+			glBindBuffer(GL_ARRAY_BUFFER, vtx_buf);
+			glBufferData(GL_ARRAY_BUFFER, vs.size()*sizeof(vertex_type), vs.data(), GL_STATIC_DRAW);
+
+			glGenBuffers(1, &idx_buf);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idx_buf);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, is.size()*sizeof(index_type), is.data(), GL_STATIC_DRAW);
+
+			auto vabs = vertex_type::get_vertex_attribs();
+			for (const auto& v : vabs)
+			{
+				glEnableVertexAttribArray(v.idx);
+				glVertexAttribPointer(v.idx, v.count, v.type, GL_FALSE, sizeof(vertex_type), (void*)v.offset);
+			}
+		}
+
+		void draw(function<void(uint, const mat4& m)> update_shader = 
+					function<void(uint,const mat4& m)>([&](uint,const mat4&){}), const mat4& world = mat4(1),
+				prim_draw_type pdt = prim_draw_type::triangle_list) override
+		{
+			glBindVertexArray(vtx_array);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idx_buf);
+			for (uint i = 0; i < parts.size(); ++i)
+			{
+				const auto& p = parts[i];
+				update_shader(i, world*p.world);
+				glDrawRangeElementsBaseVertex((GLenum)pdt, p.index_offset, p.index_offset+p.index_count, p.index_count,
+					gl_type_for_index_type<index_type>::value, (void*)0, p.vertex_offset);
+			}
+		}
+		propr(GLuint, vertex_array, { return vtx_array; });
+
+		~shared_data_model()
+		{
+			glDeleteBuffers(1, &vtx_buf);
+			glDeleteBuffers(1, &idx_buf);
+			glDeleteVertexArrays(1, &vtx_array);
+		}
 	};
 
 	template <typename vertex_type, typename index_type>

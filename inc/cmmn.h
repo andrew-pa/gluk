@@ -119,10 +119,11 @@ namespace gluk
 	template<typename T>
 	struct datablob
 	{
+		typedef T ElementType;
 		datablob() : data(nullptr), length(-1) { }
-		datablob(T* d, size_t l) : data(new T[l]), length(l)
+		datablob(T* d, size_t l) : data(/*new T[l]*/d), length(l)
 		{
-			memcpy(data, d, l*sizeof(T));
+			//memcpy(data, d, l*sizeof(T));
 		}
 		datablob(size_t l) : data(new T[l]), length(l) { }
 		datablob(const datablob<T>& o)

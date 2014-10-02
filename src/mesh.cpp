@@ -43,6 +43,6 @@ namespace gluk
 	}
 	mesh::~mesh()
 	{
-		//glDeleteVertexArrays(1, &vtx_array); TODO: why is the commented out in libQEG?
+		glDeleteVertexArrays(1, &vtx_array);// TODO: why is the commented out in libQEG?
 	}
 }

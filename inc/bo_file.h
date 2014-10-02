@@ -3,6 +3,7 @@
 
 namespace gluk
 {
+	typedef unsigned char byte;
 	class bo_file
 	{
 	public:
@@ -10,6 +11,7 @@ namespace gluk
 		{
 			generic = 0,
 			texture = 8,
+			model = 9,
 		};
 		struct chunk
 		{
@@ -27,8 +29,8 @@ namespace gluk
 		struct chunk_desc
 		{
 			uint type;
-			size_t offset;
-			size_t length;
+			uint offset;
+			uint length;
 		};
 		file_type _htype;
 		vector<chunk> _chunks;
@@ -52,7 +54,7 @@ namespace gluk
 			}
 		}
 
-		const datablob<byte>& write()
+		void write(ostream& os)
 		{
 			size_t total_length = sizeof(header)+sizeof(chunk_desc)*_chunks.size();
 			for (const auto& c : _chunks)
@@ -82,7 +84,8 @@ namespace gluk
 				bd += sizeof(chunk_desc);
 			}
 
-			return *(new datablob<byte>(fbd, total_length));
+			os.write((const char*)fbd, total_length);
+			//return *(new datablob<byte>(fbd, total_length));
 		}
 
 		proprw(file_type, type, { return _htype; });
