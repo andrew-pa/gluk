@@ -26,7 +26,8 @@ class test_app : public app
 public:
 	test_app() 
 		: app("test", vec2(640, 480), 8),
-		s(read_data_from_package(L"basic.vs.glsl"), read_data_from_package(L"basic.ps.glsl")),
+		s(default_package.open("basic.vs.glsl"), default_package.open("basic.ps.glsl")),
+		//s(read_data_from_package(L"basic.vs.glsl"), read_data_from_package(L"basic.ps.glsl")),
 		tex(gli::texture2D(gli::load_dds("test.dds"))),
 		rtx(uvec2(1024))
 	{
@@ -39,6 +40,7 @@ public:
 		tex.wrap(GL_REPEAT, GL_REPEAT, GL_REPEAT);
 		tex.unbind(0);
 
+		
 		torus = new interleaved_mesh<vertex_position_normal_texture, uint16>(
 			generate_torus<vertex_position_normal_texture, uint16>(vec2(1., .5), 64), string("torus1"));
 

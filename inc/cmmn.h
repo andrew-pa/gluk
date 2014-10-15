@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <chrono>
 #include <thread>
+#include <memory>
+#include <codecvt>
 using namespace std;
 
 #define proprw(t, n, gc) inline t& n() gc
@@ -32,6 +34,8 @@ using namespace std;
 using namespace glm;
 
 #ifdef WIN32
+//this is the path delimiter (as in ~/stuff or C:\Data)
+#define PATH_DELI "\\"
 #define NOMINMAX
 #include <Windows.h>
 #endif
@@ -114,6 +118,8 @@ namespace gluk
 		error_code_exception(uint ec, const string& m = "") : errorcode(ec), exception(m.c_str()) { }
 	};
 
+	/* BAD BAD BAD! DON'T USE!
+
 	//datablob<T>
 	// pointer to a T along with the T's size, usually file data
 	template<typename T>
@@ -121,7 +127,7 @@ namespace gluk
 	{
 		typedef T ElementType;
 		datablob() : data(nullptr), length(-1) { }
-		datablob(T* d, size_t l) : data(/*new T[l]*/d), length(l)
+		datablob(T* d, size_t l) : data(/*new T[l]d), length(l)
 		{
 			//memcpy(data, d, l*sizeof(T));
 		}
@@ -153,6 +159,83 @@ namespace gluk
 
 	//Wrapper for read_data, but adds the executable path on to the file name
 	const datablob<byte>& read_data_from_package(_In_ const wstring& filename);
+	*/
+
+	inline vector<byte> make_data_vector(const byte* d, size_t s)
+	{
+		return vector<byte>(d, d + s);
+	}
+
+	inline wstring s2ws(const std::string& str)
+	{
+		typedef std::codecvt_utf8<wchar_t> convert_typeX;
+		std::wstring_convert<convert_typeX, wchar_t> converterX;
+
+		return converterX.from_bytes(str);
+	}
+
+	inline string ws2s(const std::wstring& wstr)
+	{
+		typedef std::codecvt_utf8<wchar_t> convert_typeX;
+		std::wstring_convert<convert_typeX, wchar_t> converterX;
+
+		return converterX.to_bytes(wstr);
+	}
+
+	class filedata;
+	class package
+	{
+		wstring _base_path;
+	public:
+		package(const string& p) : _base_path(s2ws(p)){}
+		package(const package& p, const string& r) : _base_path(p._base_path+s2ws(PATH_DELI+r)) {}
+		//gets the executable directory for the base path (system dependent)
+		package(char); 
+		shared_ptr<filedata> open(const string& f, bool readwrite = false) const;
+		proprw(wstring, base_path, { return _base_path; })
+		friend class filedata;
+	};
+
+	//the executable directory
+	const static package default_package = package(42); /*number is irreverent*/
+
+	class filedata
+	{
+	protected:
+		void* _b;
+		long long _ln;
+	public:
+		inline void const* rdata() { return _b; }
+		template <typename T>
+		inline T const* data() { return (T*)_b; }
+		inline const void const* rdata() const { return _b; }
+		template <typename T>
+		inline const T const* data() const { return (T*)_b; }
+
+		inline long long length() const { return _ln; }
+
+		inline bool empty() const { return _b != nullptr; }
+
+		~filedata();
+		
+		friend class package;
+
+	};
+	typedef shared_ptr<filedata> filedatasp;
+
+	class memory_filedata : public filedata
+	{
+	public:
+		memory_filedata(void* d, long long s)
+		{
+			_b = d; _ln = s;
+		}
+		~memory_filedata()
+		{
+			delete _b;
+		}
+	};
+
 
 	enum class shader_stage
 	{

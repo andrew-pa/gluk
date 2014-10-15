@@ -16,8 +16,8 @@ namespace gluk
 		struct chunk
 		{
 			uint type;
-			datablob<byte>* data;
-			chunk(uint t, datablob<byte>* d)
+			vector<byte> data;
+			chunk(uint t, const vector<byte>& d)
 				: type(t), data(d){}
 		};
 	protected:
@@ -39,7 +39,7 @@ namespace gluk
 		bo_file(file_type t)
 			: _htype(t){}
 
-		bo_file(const datablob<byte>& d)
+		/*bo_file(const datablob<byte>& d)
 		{
 			byte* bd = d.data;
 			header* h = (header*)bd;
@@ -52,13 +52,28 @@ namespace gluk
 				_chunks.push_back(chunk(cds->type, new datablob<byte>(bd + cds->offset, cds->length)));
 				cds++; //move to next chunk
 			}
+		}*/
+
+		bo_file(const filedatasp d)
+		{
+			const byte* bd = d->data<byte>();
+			header* h = (header*)bd;
+			bd += 2 * sizeof(uint);
+			chunk_desc* cds = (chunk_desc*)bd;
+			bd += sizeof(chunk_desc)*h->number_of_chunks;
+			_htype = h->type;
+			for (uint i = 0; i < h->number_of_chunks; ++i)
+			{
+				_chunks.push_back(chunk(cds->type, make_data_vector(bd + cds->offset, cds->length)));
+				cds++; //move to next chunk
+			}
 		}
 
 		void write(ostream& os)
 		{
 			size_t total_length = sizeof(header)+sizeof(chunk_desc)*_chunks.size();
 			for (const auto& c : _chunks)
-				total_length += c.data->length;
+				total_length += c.data.size();
 
 			byte* bd = new byte[total_length];
 			byte* fbd = bd;
@@ -75,12 +90,12 @@ namespace gluk
 				chunk_desc* cd = (chunk_desc*)bd;
 				cd->type = c.type;
 				cd->offset = current_offset;
-				cd->length = c.data->length;
+				cd->length = c.data.size();
 
-				memcpy(data_bd, c.data->data, c.data->length);
+				memcpy(data_bd, c.data.data(), c.data.size());
 
-				current_offset += c.data->length;
-				data_bd += c.data->length;
+				current_offset += c.data.size();
+				data_bd += c.data.size();
 				bd += sizeof(chunk_desc);
 			}
 

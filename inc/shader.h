@@ -144,8 +144,9 @@ namespace gluk
 		GLuint _id, _idvp, _idfp, _idgp;
 		map<string, GLint> uniform_index_cache;
 	public:
-		shader(const datablob<glm::byte>& vs_data, const datablob<glm::byte>& ps_data = datablob<glm::byte>(),
-			const datablob<glm::byte>& gs_data = datablob<glm::byte>());
+		/*shader(const datablob<glm::byte>& vs_data, const datablob<glm::byte>& ps_data = datablob<glm::byte>(),
+			const datablob<glm::byte>& gs_data = datablob<glm::byte>());*/
+		shader(const filedatasp vs_data, const filedatasp ps_data = nullptr, const filedatasp gs_data = nullptr);
 		~shader();
 
 		virtual void bind();

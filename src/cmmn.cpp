@@ -3,7 +3,7 @@
 namespace gluk
 {
 #ifdef WIN32
-	//Read in the data contained in filename, put it in to a datablob
+	/*/Read in the data contained in filename, put it in to a datablob
 	const datablob<byte>& read_data(
 		const wstring& filename	//_In_ const wchar_t* filename
 		)
@@ -82,8 +82,135 @@ namespace gluk
 		std::wstring fpn = fpath;
 		fpn += filename;
 		return read_data(fpn.data());
+	}*/
+
+	package::package(char)
+	{
+		wchar_t* mdfn = new wchar_t[MAX_PATH];
+		GetModuleFileName(nullptr, mdfn, MAX_PATH);
+		_base_path = mdfn;
+		int pl = -1;
+		for (int i =_base_path.length(); i > 0; i--)
+		{
+			if (_base_path[i] == '\\')
+			{
+				pl = i + 1;
+				break;
+			}
+		}
+		_base_path = _base_path.substr(0, pl);
+		delete mdfn;
 	}
+
+	struct memmap_filedata : public filedata
+	{
+		HANDLE _wfile;
+		HANDLE _wfm;
+		memmap_filedata(HANDLE _wfile, bool rw);
+		~memmap_filedata();
+	};
+
+	shared_ptr<filedata> package::open(const string& f, bool readwrite) const
+	{
+		wstring wf = _base_path+s2ws(f);
+		auto fh = CreateFile(wf.c_str(),
+			(readwrite ? GENERIC_WRITE | GENERIC_READ : GENERIC_READ), FILE_SHARE_READ,
+			nullptr, OPEN_EXISTING,
+			FILE_ATTRIBUTE_NORMAL, nullptr);
+		if (fh == INVALID_HANDLE_VALUE)
+		{
+			ostringstream err;
+			err << "CreateFile failed (file path = " << f.c_str() << ")" << endl;
+			throw error_code_exception(GetLastError(), err.str());
+		}
+		return filedatasp(new memmap_filedata(fh, readwrite));
+	}
+
+	memmap_filedata::memmap_filedata(HANDLE _wf, bool rw)
+		: _wfile(_wf), _wfm(nullptr)
+	{
+		LARGE_INTEGER fs;
+		if (!GetFileSizeEx(_wfile, &fs))
+		{
+			throw error_code_exception(GetLastError(), "GetFileSizeEx failed");
+		}
+		_ln = fs.QuadPart;
+		
+		_wfm = CreateFileMapping(_wfile, nullptr, rw ? PAGE_READWRITE : PAGE_READONLY, 0, 0, nullptr);
+		if (_wfm == nullptr)
+		{
+			auto e = GetLastError();
+			throw error_code_exception(GetLastError(), "CreateFileMapping failed");
+		}
+
+		_b = MapViewOfFile(_wfm, rw ? FILE_MAP_ALL_ACCESS : FILE_MAP_READ, 0, 0, 0);
+		if (_b == nullptr)
+		{
+			throw error_code_exception(GetLastError(), "MapViewOfFile failed");
+		}
+	}
+	memmap_filedata::~memmap_filedata()
+	{
+		UnmapViewOfFile(_b);
+		CloseHandle(_wfm);
+		CloseHandle(_wfile);
+		_wfm = nullptr; _wfile = INVALID_HANDLE_VALUE;
+	}
+
+	filedata::~filedata()
+	{
+		/*does not delete _b because the implementation deconstructor is supposed to deal with that*/
+		_b = nullptr; 
+		_ln = 0;
+	}
+
+/*
+	filedata package::open(const wstring& f, bool readwrite)
+	{
+		auto fh = CreateFile(f.c_str(), 
+			(readwrite ? GENERIC_WRITE|GENERIC_READ : GENERIC_READ), FILE_SHARE_READ, 
+			nullptr, OPEN_EXISTING, 
+			FILE_ATTRIBUTE_NORMAL, nullptr);
+		if(fh == INVALID_HANDLE_VALUE)
+		{
+			ostringstream err;
+			err << "CreateFile failed (file path = " << f.c_str() << ")" << endl;
+			throw error_code_exception(GetLastError(), err.str());
+		}
+		uint i = 0;
+		if(!fnms.empty())
+		{
+			i = (fnms.end()--)->second+1;
+		}
+		fnms[f] = i;
+		
+		auto& mf = fs[i];
+		mf.ref_count = 1;
+		mf._wfile = fh;
+		LARGE_INTEGER fs;
+		if (!GetFileSizeEx(fh, &fs))
+		{
+			throw error_code_exception(GetLastError(), "GetFileSizeEx failed");
+		}
+		mf._ln = fs.QuadPart;
+
+		mf._wfm = CreateFileMapping(fh, nullptr, readwrite ? PAGE_READWRITE : PAGE_READONLY, 0, 0, nullptr);
+		if (mf._wfm == nullptr)
+		{
+			throw error_code_exception(GetLastError(), "CreateFileMapping failed");
+		}
+
+		mf._b = MapViewOfFile(mf._wfm, readwrite ? FILE_MAP_ALL_ACCESS : FILE_MAP_READ, 0, 0, 0);
+		if (mf._b == nullptr)
+		{
+			throw error_code_exception(GetLastError(), "MapViewOfFile failed");
+		}
+
+		return filedata(i);
+	}*/
 #endif
+
+
 
 	void __check_gl()
 	{
