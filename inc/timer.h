@@ -5,10 +5,10 @@ namespace gluk
 {
 	class timer
 	{
-		float last_time;
-		float curr_time;
-		float _ctime;
-		float _deltat;
+		double last_time;
+		double curr_time;
+		double _ctime;
+		double _deltat;
 	public:
 		timer()
 		{
@@ -34,7 +34,7 @@ namespace gluk
 			last_time = curr_time;
 		}
 
-		inline float time() { return _ctime; }
-		inline float delta_time() { return _deltat; }
+		inline float time() const { return (float)_ctime; }
+		inline float delta_time() const { return (float)_deltat; }
 	};
 }

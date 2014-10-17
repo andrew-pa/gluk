@@ -205,12 +205,12 @@ namespace gluk
 		void* _b;
 		long long _ln;
 	public:
-		inline void const* rdata() { return _b; }
+		inline void * const rdata() { return _b; }
 		template <typename T>
-		inline T const* data() { return (T*)_b; }
-		inline const void const* rdata() const { return _b; }
+		inline T * const data() { return (T*)_b; }
+		inline const void * const rdata() const { return _b; }
 		template <typename T>
-		inline const T const* data() const { return (T*)_b; }
+		inline const T * const data() const { return (T*)_b; }
 
 		inline long long length() const { return _ln; }
 

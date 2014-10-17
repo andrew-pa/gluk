@@ -33,7 +33,7 @@ namespace gluk
 		void ombind(device* dev) override
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glViewport(vp.offset.x, vp.offset.y, vp.size.x, vp.size.y);
+			glViewport((GLint)vp.offset.x, (GLint)vp.offset.y, (GLsizei)vp.size.x, (GLsizei)vp.size.y);
 			glDepthRange(vp.min_depth, vp.max_depth);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		}
@@ -56,9 +56,9 @@ namespace gluk
 		void ombind(device* dev) override
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
-			glViewport(_vp.offset.x, _vp.offset.y,
-				_vp.size.x < 0 ? dev->size().x : _vp.size.x,
-				_vp.size.y < 0 ? dev->size().y : _vp.size.y);
+			glViewport((GLint)_vp.offset.x, (GLint)_vp.offset.y,
+				(GLsizei)(_vp.size.x < 0 ? dev->size().x : _vp.size.x),
+				(GLsizei)(_vp.size.y < 0 ? dev->size().y : _vp.size.y));
 			glDepthRange(_vp.min_depth < 0 ? 0.f : _vp.min_depth,
 				_vp.max_depth < 0 ? 1.f : _vp.max_depth);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

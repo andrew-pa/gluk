@@ -105,7 +105,7 @@ namespace gluk
 		char buf[512];
 		GLsizei len = 0;
 		glGetProgramInfoLog(_id, 512, &len, buf);
-		if (len > 0)
+		if (len > 0 && !sta)
 		{
 			string sbuf(buf);
 			ostringstream oss;

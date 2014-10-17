@@ -22,6 +22,7 @@ namespace gluk
 
   class app
   {
+	  bool _did_resize;
   protected:
     GLFWwindow* wnd;
 	device* dev;

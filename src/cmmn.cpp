@@ -358,6 +358,7 @@ namespace gluk
 			else throw;
 		}
 		else throw;
+		throw;
 	}
 	GLenum pixel_format::get_gl_type() const
 	{
@@ -428,5 +429,6 @@ namespace gluk
 				return GL_DEPTH_STENCIL;
 			}
 		}
+		throw;
 	}
 };
