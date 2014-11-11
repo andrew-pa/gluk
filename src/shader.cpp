@@ -96,7 +96,30 @@ namespace gluk
 			_idfp = compile_shader(GL_FRAGMENT_SHADER, ps_data, _id);
 
 		glLinkProgram(_id);
-		
+
+		char buf[512];
+		GLsizei len = 0;
+		glGetProgramInfoLog(_id, 512, &len, buf);
+		if (len > 0)
+		{
+			string sbuf(buf);
+			ostringstream oss;
+			if(sbuf.find("warning") != sbuf.npos)
+			{
+				oss << "GL Program warning: " << sbuf << endl;
+				OutputDebugStringA(oss.str().c_str());
+			}
+			else
+			{
+				oss << "GL Program error: " << sbuf << endl;
+				OutputDebugStringA(oss.str().c_str());
+				throw exception(oss.str().c_str());
+			}
+		}
+	}
+	
+	void shader::validate()
+	{
 		glValidateProgram(_id);
 		GLint sta;
 		glGetProgramiv(_id, GL_VALIDATE_STATUS, &sta);
@@ -109,7 +132,7 @@ namespace gluk
 		{
 			string sbuf(buf);
 			ostringstream oss;
-			if(sbuf.find("warning") != sbuf.npos)
+			if (sbuf.find("warning") != sbuf.npos)
 			{
 				oss << "GL Program warning: " << sbuf << endl;
 				OutputDebugStringA(oss.str().c_str());

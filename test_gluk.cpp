@@ -31,7 +31,6 @@ public:
 		tex(gli::texture2D(gli::load_dds("test.dds"))),
 		rtx(uvec2(1024))
 	{
-		
 		tex.bind(0);
 		glGenerateMipmap(GL_TEXTURE_2D);
 		tex.mag_filter(GL_LINEAR);

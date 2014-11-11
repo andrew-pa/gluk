@@ -19,8 +19,19 @@ namespace gluk
 
 	class render_target
 	{
+	protected:
+		bool _wstencil;
+		render_target(bool _ws) : _wstencil(_ws) {}
 	public:
 		virtual void ombind(device* dev) = 0;
+
+		virtual void bind_for_read() = 0;
+
+		virtual void clear()
+		{
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			if (_wstencil) glClear(GL_STENCIL_BITS);
+		}
 		virtual viewport& mviewport() = 0;
 	};
 
@@ -29,13 +40,18 @@ namespace gluk
 		viewport vp;
 	public:
 		default_render_target(const viewport& _vp) //viewport(vec2(-1)) makes a viewport that renders to the whole screen with the default settings
-			: vp(_vp) {}
+			: vp(_vp), render_target(false) {}
 		void ombind(device* dev) override
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glViewport((GLint)vp.offset.x, (GLint)vp.offset.y, (GLsizei)vp.size.x, (GLsizei)vp.size.y);
 			glDepthRange(vp.min_depth, vp.max_depth);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		}
+		void bind_for_read() override
+		{
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 		}
 		inline viewport& mviewport() override { return vp; }
 	};
@@ -46,7 +62,6 @@ namespace gluk
 		GLuint _fbo;
 		texture2d* depthtx;
 		viewport _vp;
-		bool _wstencil;
 	public:
 		render_texture2d(size_vec_t size, const pixel_format& f = pixel_format(pixel_components::rgba, pixel_type::floatp, 32),
 			const pixel_format& df = pixel_format(pixel_components::depth, pixel_type::floatp, 32));
@@ -61,14 +76,62 @@ namespace gluk
 				(GLsizei)(_vp.size.y < 0 ? dev->size().y : _vp.size.y));
 			glDepthRange(_vp.min_depth < 0 ? 0.f : _vp.min_depth,
 				_vp.max_depth < 0 ? 1.f : _vp.max_depth);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			if (_wstencil) glClear(GL_STENCIL_BITS);
+		}
+
+		void bind_for_read() override
+		{
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, _fbo);
 		}
 
 		inline viewport& mviewport() override { return _vp; }
 
 		propr(GLuint, frame_buffer, { return _fbo; })
 		propr(texture2d*, depth_buffer, { return depthtx; })
+
+		~render_texture2d() 
+		{
+			glDeleteFramebuffers(1, &_fbo);
+			if (depthtx) { delete depthtx; depthtx = nullptr; } 
+		}
+	};
+
+	class render_texture_cube : public texture_cube
+	{
+		viewport _vp;
+		struct render_face : public render_target
+		{
+			render_texture_cube* rtc;
+			uint idx;
+			render_face():render_target(false){}
+			render_face(render_texture_cube* r, uint i)
+				: idx(i), rtc(r), render_target(r->_wstencil) {}
+			void ombind(device* dev) override;
+			viewport& mviewport() override { return rtc->_vp; }
+			void bind_for_read() override
+			{
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+				glBindFramebuffer(GL_READ_FRAMEBUFFER, rtc->_fbo[idx]);
+			}
+		};
+		render_face rtx[6];
+		GLuint _fbo[6];
+		texture2d _db;
+		bool _wstencil;
+	public:
+		render_texture_cube(viewport vp,
+			gluk::pixel_format pf = gluk::pixel_format(gluk::pixel_components::rgba, gluk::pixel_type::floatp, 32),
+			gluk::pixel_format dpf = gluk::pixel_format(gluk::pixel_components::depth, gluk::pixel_type::floatp, 32));
+
+		inline render_face& target_for_face(uint i)
+		{
+			return rtx[i];
+		}
+
+		proprw(viewport, mviewport, { return _vp; });
+		proprw(texture2d, depth_buffer, { return _db; });
+
+		~render_texture_cube();
 	};
 
 	template <int N>
@@ -83,7 +146,7 @@ namespace gluk
 		multi_render_texture2d(gluk::viewport vp,
 			gluk::pixel_format pf = gluk::pixel_format(gluk::pixel_components::rgba, gluk::pixel_type::floatp, 32),
 			gluk::pixel_format dpf = gluk::pixel_format(gluk::pixel_components::depth, gluk::pixel_type::floatp, 32))
-			: _vp(vp)
+			: _vp(vp), render_target(dpf.comp == pixel_components::depth_stencil)
 		{
 			glGenFramebuffers(1, &_fbo);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo);
@@ -102,7 +165,7 @@ namespace gluk
 
 			glBindTexture(GL_TEXTURE_2D, _dtx);
 			glTexImage2D(GL_TEXTURE_2D, 0, dpf.get_gl_format_internal(), vp.size.x, vp.size.y, 0, dpf.get_gl_format(), dpf.get_gl_type(), nullptr);
-			glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _dtx, 0);
+			glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, _wstencil ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _dtx, 0);
 
 			vector<GLenum> db;
 			for (int i = 0; i < N; ++i) db.push_back(GL_COLOR_ATTACHMENT0 + i);
@@ -119,15 +182,14 @@ namespace gluk
 				_vp.size.y < 0 ? dev->size().y : _vp.size.y);
 			glDepthRange(_vp.min_depth < 0 ? 0.f : _vp.min_depth,
 				_vp.max_depth < 0 ? 1.f : _vp.max_depth);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		}
 
-		void bind_for_read()
+		void bind_for_read() override
 		{
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, _fbo);
 		}
-
+		
 		gluk::viewport& mviewport() { return _vp; }
 
 		propr(GLuint, fbo, { return _fbo; });

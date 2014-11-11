@@ -23,9 +23,9 @@ namespace gluk
 		device(vec2 s_, GLFWwindow* w_, uint aal);
 		~device();
 		render_target* current_render_target() const;
-		void pop_render_target();
-		void push_render_target(render_target* rt);
-		void update_render_target();
+		void pop_render_target(bool clear = true);
+		void push_render_target(render_target* rt, bool clear = true);
+		void update_render_target(bool c);
 		void present();
 		void resize(vec2 ns);
 

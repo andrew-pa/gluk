@@ -1,4 +1,5 @@
 #include "app.h"
+#include "render_target.h"
 #include "timer.h"
 
 namespace gluk
@@ -60,7 +61,7 @@ namespace gluk
 		{
 			tm.update();
 			update(tm.time(), tm.delta_time());
-			dev->update_render_target();
+			dev->current_render_target()->clear(); //dev->update_render_target(true);
 			render(tm.time(), tm.delta_time());
 			dev->present();
 			fc++;

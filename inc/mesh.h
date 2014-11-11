@@ -183,7 +183,7 @@ namespace gluk
 			glBindVertexArray(vtx_array);			
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idx_buf);
 			glDrawRangeElementsBaseVertex((GLenum)dt, index_offset, (oindex_count == -1 ? idx_cnt : oindex_count), (oindex_count == -1 ? idx_cnt : oindex_count),
-				gl_type_for_index_type<index_type>::value, (void*)0, vertex_offset); //TODO: Change GL_UNSIGNED_SHORT to whatever the appropriate GL_* const is for the index_type
+				gl_type_for_index_type<index_type>::value, (void*)0, vertex_offset); 
 		}
 		
 		~interleaved_mesh()
@@ -212,8 +212,8 @@ namespace gluk
 		}
 		
 		proprw(string, name, { return _name; });
-		virtual void draw(function<void(uint, const mat4& m)> update_shader =
-			function<void(uint, const mat4& m)>([&](uint, const mat4&){}), const mat4& world = mat4(1),
+		virtual void draw(function<void(uint, const mat4& m, void*)> update_shader =
+			function<void(uint, const mat4& m, void*)>([&](uint, const mat4&, void*){}), const mat4& world = mat4(1),
 			prim_draw_type pdt = prim_draw_type::triangle_list) = 0;
 		
 		~model()
@@ -235,8 +235,9 @@ namespace gluk
 			sys_mesh<vertex_type, index_type> mesh;
 			mat4 world;
 			string name;
+			void* ud;
 			sysmodel_part(const sys_mesh<vertex_type, index_type>& m, mat4 w, string n)
-				: mesh(m), world(w), name(n) {}
+				: mesh(m), world(w), name(n), ud(nullptr) {}
 		};
 		struct model_part
 		{
@@ -246,14 +247,15 @@ namespace gluk
 			uint index_count;
 			string name;
 			mat4 world;
+			void* ud;
 
 			model_part() {}
 
 			model_part(GLuint vao, GLuint v, GLuint i, uint ic, const string& n, const mat4& m)
-				: vbo(v), ibo(i), index_count(ic), name(n), world(m) {}
+				: vbo(v), ibo(i), index_count(ic), name(n), world(m), ud(nullptr) {}
 			
 			model_part(const sysmodel_part& p)
-				: world(p.world), name(p.name), index_count(p.mesh.indices.size())
+				: world(p.world), name(p.name), index_count(p.mesh.indices.size()), ud(p.ud)
 			{
 				glGenVertexArrays(1, &vao);
 				glBindVertexArray(vao);
@@ -300,8 +302,8 @@ namespace gluk
 			}
 		}
 
-		void draw(function<void(uint, const mat4& m)> update_shader =
-			function<void(uint, const mat4& m)>([&](uint, const mat4&){}), const mat4& world = mat4(1),
+		void draw(function<void(uint, const mat4& m, void*)> update_shader =
+			function<void(uint, const mat4&, void*)>([&](uint, const mat4&, void*){}), const mat4& world = mat4(1),
 			prim_draw_type pdt = prim_draw_type::triangle_list) override
 		{
 			for (uint i = 0; i < parts.size(); ++i)
@@ -309,7 +311,7 @@ namespace gluk
 				const auto& p = parts[i];
 				glBindVertexArray(p.vao);
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, p.ibo);
-				update_shader(i, world*p.world);
+				update_shader(i, world*p.world, p.ud);
 				glDrawElements((GLenum)pdt, p.index_count, gl_type_for_index_type<index_type>::value, (void*)0);
 			}
 		}
@@ -395,8 +397,8 @@ namespace gluk
 			}
 		}
 
-		void draw(function<void(uint, const mat4& m)> update_shader = 
-					function<void(uint,const mat4& m)>([&](uint,const mat4&){}), const mat4& world = mat4(1),
+		void draw(function<void(uint, const mat4& m, void*)> update_shader = 
+					function<void(uint,const mat4& m, void*)>([&](uint,const mat4&, void*){}), const mat4& world = mat4(1),
 				prim_draw_type pdt = prim_draw_type::triangle_list) override
 		{
 			glBindVertexArray(vtx_array);
@@ -404,7 +406,7 @@ namespace gluk
 			for (uint i = 0; i < parts.size(); ++i)
 			{
 				const auto& p = parts[i];
-				update_shader(i, world*p.world);
+				update_shader(i, world*p.world, nullptr);
 				glDrawRangeElementsBaseVertex((GLenum)pdt, p.index_offset, p.index_offset+p.index_count, p.index_count,
 					gl_type_for_index_type<index_type>::value, (void*)0, p.vertex_offset);
 			}

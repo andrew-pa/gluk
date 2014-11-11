@@ -89,22 +89,23 @@ namespace gluk
 		return rtsk.top();
 	}
 
-	void device::push_render_target(render_target* rt)
+	void device::push_render_target(render_target* rt, bool clear)
 	{
 		rtsk.push(rt);
-		update_render_target();
+		update_render_target(clear);
 	}
 
-	void device::pop_render_target()
+	void device::pop_render_target(bool clear)
 	{
 		if (rtsk.size() == 1) return;
 		rtsk.pop();
-		update_render_target();
+		update_render_target(clear);
 	}
 
-	void device::update_render_target()
+	void device::update_render_target(bool c)
 	{
 		rtsk.top()->ombind(this);
+		if (c) rtsk.top()->clear();
 	}
 
 	uint device::alloc_ubbi()

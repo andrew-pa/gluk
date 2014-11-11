@@ -154,7 +154,7 @@ namespace gluk
 		virtual void update();
 
 		template <typename T>
-		void set_uniform(const string& id, const T& value)
+		void set_uniform(const string& id, const T& value, bool fail_on_nfind = true)
 		{
 			GLint ix = -1;
 			auto ui = uniform_index_cache.find(id);
@@ -163,6 +163,16 @@ namespace gluk
 			else
 			{
 				ix = glGetUniformLocation(_id, id.c_str());
+				if(ix < 0)
+				{
+					ostringstream oss;
+					oss << "Can't find uniform: " << id;
+					if(!fail_on_nfind)
+					{
+						return;
+					}
+					throw new exception(oss.str().c_str());
+				}
 				uniform_index_cache[id] = ix;
 			}
 			glSetUniformResolve<T>::set(ix, value);
@@ -175,12 +185,14 @@ namespace gluk
 			return new uniform_buffer<T>(dev, _id, glGetUniformBlockIndex(_id, id.c_str()));
 		}
 
-		template <int Dim>
-		void set_texture(const string& id, const texture<Dim>& tex, int slot)
+		template <int Dim, int AS = 1>
+		void set_texture(const string& id, const texture<Dim, AS>& tex, int slot, bool fail_on_not_found = true)
 		{
 			tex.bind(slot);
-			set_uniform(id, slot);
+			set_uniform(id, slot, fail_on_not_found);
 		}
+
+		void validate();
 
 		propr(GLuint, program_id, { return _id; });
 		propr(GLuint, vertex_shader_id, { return _idvp; });
