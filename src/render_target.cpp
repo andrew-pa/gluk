@@ -41,7 +41,9 @@ namespace gluk
 	void render_texture_cube::render_face::ombind(device* dev)
 	{
 		const auto& _vp = rtc->_vp;	
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, rtc->_fbo[idx]);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, rtc->_fbo);
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, cube_map_face_for_index(idx),
+			rtc->_txid, 0);
 		glViewport(_vp.offset.x, _vp.offset.y,
 			_vp.size.x < 0 ? dev->size().x : _vp.size.x,
 			_vp.size.y < 0 ? dev->size().y : _vp.size.y);
@@ -55,31 +57,21 @@ namespace gluk
 		pixel_format dpf)
 		: texture_cube(pf, vp.size), _vp(vp), _db(dpf, vp.size), _wstencil(dpf.comp == pixel_components::depth_stencil)
 	{
-		static GLuint face[] = 
-		{
-			GL_TEXTURE_CUBE_MAP_POSITIVE_X,
-			GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
-			GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
-			GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
-			GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
-			GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
-		};
-		glGenFramebuffers(6, _fbo);
+		
+		glGenFramebuffers(1, &_fbo);
 		for (uint i = 0; i < 6; ++i)
 		{
 			rtx[i] = render_face(this, i);
-			glBindFramebuffer(GL_FRAMEBUFFER, _fbo[i]);
-			glFramebufferTextureFaceEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, this->id(), 0,
-				face[i]);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, dpf.comp == pixel_components::depth_stencil ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _db.id(), 0);
 		}
+		glBindFramebuffer(GL_FRAMEBUFFER, _fbo);;
+		glFramebufferTexture2D(GL_FRAMEBUFFER, dpf.comp == pixel_components::depth_stencil ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _db.id(), 0);
 		glDrawBuffer(GL_COLOR_ATTACHMENT0);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 	render_texture_cube::~render_texture_cube()
 	{
-		glDeleteFramebuffers(6, _fbo);
+		glDeleteFramebuffers(1, &_fbo);
 	}
 
 }

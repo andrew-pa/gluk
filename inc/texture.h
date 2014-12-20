@@ -98,7 +98,8 @@ namespace gluk
 			glDeleteTextures(1, &_txid);
 		}
 
-		propr(GLuint, id, { return _txid; })
+		propr(GLuint, id, { return _txid; });
+		propr(size_vec_t, size, { return _size; });
 	};
 
 	class texture2d : public texture<2>

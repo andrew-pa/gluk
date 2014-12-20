@@ -35,6 +35,7 @@ namespace gluk
 
     virtual void render(float t, float dt) = 0;
     virtual void update(float t, float dt) = 0;
+	virtual void make_resolution_dependent_resources(vec2 size) {}
     virtual void resize() { }
 	virtual void key_down(uint keycode, key_action action, key_mod mods) {}
   };

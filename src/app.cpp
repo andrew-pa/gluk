@@ -39,6 +39,7 @@ namespace gluk
 			auto t = (app*)glfwGetWindowUserPointer(wnd);
 			t->dev->resize(vec2(w, h));
 			t->resize();
+			t->make_resolution_dependent_resources(t->dev->size());
 		});
 
 		glfwSetKeyCallback(wnd, [](GLFWwindow* wnd, int key, int scancode, int action, int mods) 

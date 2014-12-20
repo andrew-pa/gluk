@@ -46,13 +46,39 @@ namespace gluk
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glViewport((GLint)vp.offset.x, (GLint)vp.offset.y, (GLsizei)vp.size.x, (GLsizei)vp.size.y);
 			glDepthRange(vp.min_depth, vp.max_depth);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		}
 		void bind_for_read() override
 		{
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 		}
+		inline viewport& mviewport() override { return vp; }
+	};
+
+	class external_fbo_render_target : public render_target
+	{
+		viewport vp;
+	public:
+		GLuint* fbo;
+		
+		external_fbo_render_target() : render_target(false), vp(vec2(0)), fbo(nullptr) {}
+		external_fbo_render_target(const viewport& _vp, GLuint& _fbo, bool has_stencil = false)
+			: render_target(has_stencil), vp(_vp), fbo(&_fbo)
+		{}
+
+		void ombind(device* dev) override
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, *fbo);
+			glViewport((GLint)vp.offset.x, (GLint)vp.offset.y, (GLsizei)vp.size.x, (GLsizei)vp.size.y);
+			glDepthRange(vp.min_depth, vp.max_depth);
+		}
+
+		void bind_for_read() override
+		{
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, *fbo);
+		}
+		
 		inline viewport& mviewport() override { return vp; }
 	};
 
@@ -111,11 +137,11 @@ namespace gluk
 			void bind_for_read() override
 			{
 				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-				glBindFramebuffer(GL_READ_FRAMEBUFFER, rtc->_fbo[idx]);
+				glBindFramebuffer(GL_READ_FRAMEBUFFER, rtc->_fbo);
 			}
 		};
 		render_face rtx[6];
-		GLuint _fbo[6];
+		GLuint _fbo;//[6];
 		texture2d _db;
 		bool _wstencil;
 	public:

@@ -109,6 +109,20 @@ namespace gluk
 		texture_cube = 3,
 	};
 
+	inline GLuint cube_map_face_for_index(uint i)
+	{
+		static const GLuint face[] =
+		{
+			GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+			GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+			GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+			GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+			GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+			GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
+		};
+		return face[i];
+	}
+
 	//error_code_exception
 	// exception the resulted from a error code that is failing
 	struct error_code_exception : public exception
