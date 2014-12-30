@@ -116,6 +116,7 @@ namespace gluk
 				throw exception(oss.str().c_str());
 			}
 		}
+		glerr
 	}
 	
 	void shader::validate()

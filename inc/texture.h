@@ -40,7 +40,8 @@ namespace gluk
 	class texture
 	{
 	public:
-		typedef typename vec_of<Dim, uint, highp>::x size_vec_t;
+		typedef typename vec_of<Dim, mediump_uint>::x size_vec_t;
+		
 	protected:
 		size_vec_t _size;
 		GLuint _txid;
@@ -49,6 +50,12 @@ namespace gluk
 			: _size(s)
 		{
 			glGenTextures(1, &_txid);
+			bind(7);
+			min_filter(GL_LINEAR);
+			mag_filter(GL_LINEAR);
+			ansiotropic_filter(1.f);
+			wrap(GL_REPEAT, GL_REPEAT, GL_REPEAT);
+			unbind(7);
 		}
 
 		texture(GLuint glid, size_vec_t s)
@@ -112,6 +119,7 @@ namespace gluk
 			glTexImage2D(GL_TEXTURE_2D, 0, fmt.get_gl_format_internal(), size_.x, size_.y, 0,
 				fmt.get_gl_format(), fmt.get_gl_type(), data);
 			glBindTexture(GL_TEXTURE_2D, 0);
+			glerr
 		}
 
 		texture2d(const gli::texture2D& tex)
@@ -151,6 +159,7 @@ namespace gluk
 						tex[lvl].data());
 				}
 			}
+			glerr
 		}
 	};
 

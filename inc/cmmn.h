@@ -26,11 +26,13 @@ using namespace std;
 #define propr(t, n, gc) inline t n() const gc
 
 #define GLM_FORCE_RADIANS
+
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/random.hpp>
-#include <glm/gtx/io.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/unsigned_int.hpp>
+#include <glm/gtc/type_precision.hpp>
 using namespace glm;
 
 #ifdef WIN32
@@ -45,6 +47,8 @@ using namespace glm;
 #define GLFW
 #include <GLFW/glfw3.h>
 
+#define glerr 
+//{auto err = glGetError(); if(err != 0) { char s[16]; sprintf(s, "GL Error: %08X\n", err); OutputDebugStringA(s); throw; }}
 
 //deal with stupid windows header and other fools
 #undef min
@@ -256,36 +260,36 @@ namespace gluk
 		pixel_shader, vertex_shader, geometry_shader //... other shaders
 	};
 
-	template <int Dim, class T, precision P>
+	template <int Dim, class T>
 	struct vec_of
 	{
 	public:
 		typedef int x;
 	};
 
-	template <class T, precision P>
-	struct vec_of<1, T, P>
+	template <class T>
+	struct vec_of<1, T>
 	{
 	public:
-		typedef glm::detail::tvec1<T, P> x;
+		typedef glm::detail::tvec1<T> x;
 	};
-	template <class T, precision P>
-	struct vec_of<2, T, P>
+	template <class T>
+	struct vec_of<2, T>
 	{
 	public:
-		typedef glm::detail::tvec2<T, P> x;
+		typedef glm::detail::tvec2<T> x;
 	};
-	template <class T, precision P>
-	struct vec_of<3, T, P>
+	template <class T>
+	struct vec_of<3, T>
 	{
 	public:
-		typedef glm::detail::tvec3<T, P> x;
+		typedef glm::detail::tvec3<T> x;
 	};
-	template <class T, precision P>
-	struct vec_of<4, T, P>
+	template <class T>
+	struct vec_of<4, T>
 	{
 	public:
-		typedef glm::detail::tvec4<T, P> x;
+		typedef glm::detail::tvec4<T> x;
 	};
 
 };

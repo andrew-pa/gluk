@@ -6,13 +6,14 @@ namespace gluk
 {
 	app::app(const string& title, vec2 winsize, uint aa_samples, uvec4 colorbits, uvec2 dsbits, function<void()> apply_window_hints)
 	{
+		glerr
 		if (!glfwInit()) throw exception("GLFW init failed!");
+		glfwSetErrorCallback([](int ec, const char* em){ char s[64]; sprintf(s, "GLFW error: %s, (error code: %08X)", em, ec);  OutputDebugStringA(s); });
 		if(aa_samples >= 1) glfwWindowHint(GLFW_SAMPLES, aa_samples);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);	
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-		
 		apply_window_hints();
 		
 		glfwWindowHint(GLFW_RED_BITS, colorbits.r);
@@ -22,7 +23,8 @@ namespace gluk
 		
 		glfwWindowHint(GLFW_DEPTH_BITS, dsbits.x);
 		glfwWindowHint(GLFW_STENCIL_BITS, dsbits.y);		
-	
+		glerr
+
 		wnd = glfwCreateWindow((int)floor(winsize.x), (int)floor(winsize.y), title.c_str(), nullptr, nullptr);
 		if(!wnd)
 		{
@@ -48,7 +50,9 @@ namespace gluk
 			t->key_down(key, (key_action)action, (key_mod)mods);
 		});
 		
+		glerr
 		dev = new device(winsize, wnd, aa_samples);
+		glerr
 	}
 
 	void app::run()

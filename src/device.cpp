@@ -49,28 +49,40 @@ namespace gluk
 		: _rtsize(s_), next_uniform_buffer_bind_index(0),
 		wnd(w_)
 	{
+		glerr
 		glfwMakeContextCurrent(wnd);
-		glewInit();
-
+		glerr
+		GLenum err = glewInit();
+		if(err != GLEW_OK)
+		{
+			OutputDebugString(L"GLEW Error: ");
+			OutputDebugStringA((char*)glewGetErrorString(err));
+			OutputDebugString(L"\n");
+		}
+		glerr
 #ifdef _DEBUG
 		const GLubyte* glVersionString = glGetString(GL_VERSION);
 		int glVersion[2] = { -1, -1 };
 		glGetIntegerv(GL_MAJOR_VERSION, &glVersion[0]);
 		glGetIntegerv(GL_MINOR_VERSION, &glVersion[1]);
+		glerr
 		ostringstream l;
 		l << "GL Version: " << glVersion[0] << "." << glVersion[1] << endl;
 		l << "GL Vendor: " << glGetString(GL_VENDOR) << endl;
 		l << "GL Version String: " << glVersionString << endl;
 		OutputDebugStringA(l.str().c_str());
+		glerr
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 		glDebugMessageCallback((GLDEBUGPROC)&debug_gl_callback, this);
+		glerr
 #endif
 		rtsk.push(drt = new default_render_target(viewport(_rtsize)));
-
+		glerr
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 		glClearColor(0.2f, 0.2f, 0.2f, 1.f);
+		glerr
 	}
 
 	void device::resize(vec2 s)

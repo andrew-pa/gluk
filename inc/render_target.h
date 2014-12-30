@@ -40,7 +40,10 @@ namespace gluk
 		viewport vp;
 	public:
 		default_render_target(const viewport& _vp) //viewport(vec2(-1)) makes a viewport that renders to the whole screen with the default settings
-			: vp(_vp), render_target(false) {}
+			: vp(_vp), render_target(false) 
+		{
+			glerr
+		}
 		void ombind(device* dev) override
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -86,13 +89,14 @@ namespace gluk
 	{
 	protected:
 		GLuint _fbo;
+		GLuint rbo;
 		texture2d* depthtx;
 		viewport _vp;
 	public:
-		render_texture2d(size_vec_t size, const pixel_format& f = pixel_format(pixel_components::rgba, pixel_type::floatp, 32),
-			const pixel_format& df = pixel_format(pixel_components::depth, pixel_type::floatp, 32));
+		//render_texture2d(size_vec_t size, const pixel_format& f = pixel_format(pixel_components::rgba, pixel_type::floatp, 32),
+		//	const pixel_format& df = pixel_format(pixel_components::depth, pixel_type::floatp, 32));
 		render_texture2d(const viewport& vp, const pixel_format& f = pixel_format(pixel_components::rgba, pixel_type::floatp, 32),
-			const pixel_format& df = pixel_format(pixel_components::depth, pixel_type::floatp, 32));
+			const pixel_format& df = pixel_format(pixel_components::depth, pixel_type::floatp, 32), bool use_rbo_dsb = true);
 
 		void ombind(device* dev) override
 		{
