@@ -28,11 +28,11 @@ using namespace std;
 #define GLM_FORCE_RADIANS
 
 #include <glm/glm.hpp>
-#include <glm/gtc/constants.hpp>
 #include <glm/gtc/random.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/unsigned_int.hpp>
-#include <glm/gtc/type_precision.hpp>
+#include <glm/integer.hpp>
+#include <glm/gtx/io.hpp>
+//#include <glm/gtc/type_precision.hpp>
 using namespace glm;
 
 #ifdef WIN32
@@ -244,13 +244,23 @@ namespace gluk
 	class memory_filedata : public filedata
 	{
 	public:
-		memory_filedata(void* d, long long s)
+		memory_filedata(void*const d, long long s)
 		{
 			_b = d; _ln = s;
 		}
 		~memory_filedata()
 		{
 			delete _b;
+		}
+	};
+
+	class constmem_filedata : public filedata
+	{
+	public:
+		constmem_filedata(void * const d, long long s)
+		{
+			_b = d;
+			_ln = s;
 		}
 	};
 
@@ -271,25 +281,25 @@ namespace gluk
 	struct vec_of<1, T>
 	{
 	public:
-		typedef glm::detail::tvec1<T> x;
+		typedef tvec1<T> x;
 	};
 	template <class T>
 	struct vec_of<2, T>
 	{
 	public:
-		typedef glm::detail::tvec2<T> x;
+		typedef tvec2<T> x;
 	};
 	template <class T>
 	struct vec_of<3, T>
 	{
 	public:
-		typedef glm::detail::tvec3<T> x;
+		typedef tvec3<T> x;
 	};
 	template <class T>
 	struct vec_of<4, T>
 	{
 	public:
-		typedef glm::detail::tvec4<T> x;
+		typedef tvec4<T> x;
 	};
 
 };

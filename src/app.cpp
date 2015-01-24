@@ -4,7 +4,7 @@
 
 namespace gluk
 {
-	app::app(const string& title, vec2 winsize, uint aa_samples, uvec4 colorbits, uvec2 dsbits, function<void()> apply_window_hints)
+	app::app(const string& title, vec2 winsize, uint aa_samples, const uvec4& colorbits, uvec2 dsbits, function<void()> apply_window_hints)
 	{
 		glerr
 		if (!glfwInit()) throw exception("GLFW init failed!");

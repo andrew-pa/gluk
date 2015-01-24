@@ -125,7 +125,14 @@ namespace gluk
 		void set_data(const T& value)
 		{
 			glBindBuffer(GL_UNIFORM_BUFFER, _buf);
-			glBufferData(GL_UNIFORM_BUFFER, sizeof(T), &value, GL_DYNAMIC_DRAW);
+			glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(T), &value);//glBufferData(GL_UNIFORM_BUFFER, sizeof(T), &value, GL_DYNAMIC_DRAW);
+		}
+		
+		template <typename U>
+		void set_subdata(const U& value, size_t offset)
+		{
+			glBindBuffer(GL_UNIFORM_BUFFER, _buf);
+			glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(U), &value);
 		}
 
 		propr(GLuint, buffer, { return _buf; });

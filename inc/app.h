@@ -29,7 +29,7 @@ namespace gluk
 	timer tm;
   public:
     app(const string& title, vec2 winsize, uint aa_samples,
-        uvec4 colorbits = uvec4(8), uvec2 dsbits = uvec2(32,0), function<void()> apply_window_hints = function<void()>([&]{}));
+        const uvec4& colorbits = uvec4(8), uvec2 dsbits = uvec2(32,0), function<void()> apply_window_hints = function<void()>([&]{}));
     ~app();
     void run();
 

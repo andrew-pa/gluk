@@ -236,7 +236,7 @@ namespace gluk
 			mat4 world;
 			string name;
 			void* ud;
-			sysmodel_part(const sys_mesh<vertex_type, index_type>& m, mat4 w, string n)
+			sysmodel_part(const sys_mesh<vertex_type, index_type>& m, const mat4& w, string n)
 				: mesh(m), world(w), name(n), ud(nullptr) {}
 		};
 		struct model_part

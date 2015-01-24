@@ -5,6 +5,7 @@
 #include "texture.h"
 #include "render_target.h"
 #include <gli/gli.hpp>
+
 using namespace gluk;
 
 vec4 texture_data[] =
@@ -127,7 +128,7 @@ public:
 		dev->pop_render_target();
 		
 
-		glViewport(0, 0, dev->size().x, dev->size().y);
+		//glViewport(0, 0, dev->size().x, dev->size().y);
 		s.bind();
 		
 		s.set_uniform("world", translate(mat4(1), vec3(1.7f, 0.f, 0.f)));
