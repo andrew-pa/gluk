@@ -89,6 +89,7 @@ namespace gluk
 	{
 		_rtsize = s;
 		drt->mviewport() = viewport(s);
+		update_render_target(false);
 	}
 
 	void device::present()
