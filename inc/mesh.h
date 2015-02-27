@@ -164,7 +164,7 @@ namespace gluk
 			for (const auto& v : vabs)
 			{
 				glEnableVertexAttribArray(v.idx);
-				glVertexAttribPointer(v.idx, v.count, v.type, GL_FALSE, sizeof(vertex_type), (void*)v.offset);
+				glVertexAttribPointer(v.idx, v.count, v.type, GL_TRUE, sizeof(vertex_type), (void*)v.offset);
 			}
 		}
 
