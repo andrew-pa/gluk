@@ -170,18 +170,18 @@ namespace gluk
 		GLuint _fbo;
 		GLuint _tex[N];
 		texture<2>* _mtex[N];
-		GLuint _dtx;
+		texture2d _dtx;
 		gluk::viewport _vp;
 	public:
 		multi_render_texture2d(gluk::viewport vp,
 			gluk::pixel_format pf = gluk::pixel_format(gluk::pixel_components::rgba, gluk::pixel_type::floatp, 32),
 			gluk::pixel_format dpf = gluk::pixel_format(gluk::pixel_components::depth, gluk::pixel_type::floatp, 32))
-			: _vp(vp), render_target(dpf.comp == pixel_components::depth_stencil)
+			: _vp(vp), render_target(dpf.comp == pixel_components::depth_stencil),
+			_dtx(dpf, vp.size)
 		{
 			glGenFramebuffers(1, &_fbo);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo);
 			glGenTextures(N, _tex);
-			glGenTextures(1, &_dtx);
 
 			for (int i = 0; i < N; ++i)
 			{
@@ -194,7 +194,6 @@ namespace gluk
 			}
 
 			glBindTexture(GL_TEXTURE_2D, _dtx);
-			glTexImage2D(GL_TEXTURE_2D, 0, dpf.get_gl_format_internal(), vp.size.x, vp.size.y, 0, dpf.get_gl_format(), dpf.get_gl_type(), nullptr);
 			glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, _wstencil ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _dtx, 0);
 
 			vector<GLenum> db;
@@ -223,7 +222,7 @@ namespace gluk
 		gluk::viewport& mviewport() { return _vp; }
 
 		propr(GLuint, fbo, { return _fbo; });
-		propr(GLuint, depth_texture, { return _dtx; });
+		proprw(texture2d, depth_texture, { return _dtx; });
 
 		inline GLuint get_gl_texture(int i)
 		{
@@ -238,7 +237,6 @@ namespace gluk
 		~multi_render_texture2d()
 		{
 			glDeleteTextures(N, _tex);
-			glDeleteTextures(1, &_dtx);
 			glDeleteFramebuffers(1, &_fbo);
 		}
 	};

@@ -210,7 +210,11 @@ namespace gluk
 		//gets the executable directory for the base path (system dependent)
 		package(char); 
 		shared_ptr<filedata> open(const string& f, bool readwrite = false) const;
+
+		string path_of(const string& p) const { return ws2s(_base_path) + p; }
+
 		proprw(wstring, base_path, { return _base_path; })
+		propr(wstring, base_path, { return _base_path; })
 		friend class filedata;
 	};
 

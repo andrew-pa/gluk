@@ -84,6 +84,11 @@ namespace gluk
 		glFramebufferTexture2D(GL_FRAMEBUFFER, dpf.comp == pixel_components::depth_stencil ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _db.id(), 0);
 		glDrawBuffer(GL_COLOR_ATTACHMENT0);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		bind(0);
+		min_filter(GL_LINEAR);
+		mag_filter(GL_LINEAR);
+		wrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+		unbind(0);
 	}
 
 	render_texture_cube::~render_texture_cube()
