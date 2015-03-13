@@ -9,8 +9,8 @@ namespace gluk
 			"layout(location=0) in vec3 pos;"
 			"void main() { gl_Position = vec4(pos.xy, 0.5f, 1.f); }";
 
-		full_screen_quad_shader::full_screen_quad_shader(const filedatasp ps)
-			: shader(make_shared<constmem_filedata>(fsq_vertex_shader_src, sizeof(fsq_vertex_shader_src)), ps)
+		full_screen_quad_shader::full_screen_quad_shader(const filedatasp ps, const filedatasp vs)
+			: shader(vs ? vs : make_shared<constmem_filedata>(fsq_vertex_shader_src, sizeof(fsq_vertex_shader_src)), ps)
 		{
 			fsq = new interleaved_mesh<vertex_position, uint16>(generate_screen_quad<vertex_position, uint16>(vec2(0.f), vec2(2.f)), "");
 		}
@@ -22,9 +22,12 @@ namespace gluk
 
 		void full_screen_quad_shader::draw(device* dev, float t)
 		{
-			set_uniform("time", t);
-			set_uniform("resolution", dev->size());
+			set_uniform("time", t, false);
+			set_uniform("resolution", dev->size(), false);
+			auto x = glIsEnabled(GL_CULL_FACE);
+			glDisable(GL_CULL_FACE); //fsq generator is not quite right, so it produces a back facing quad 
 			fsq->draw();
+			if(x) glEnable(GL_CULL_FACE);
 		}
 	
 

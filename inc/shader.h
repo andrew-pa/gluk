@@ -161,7 +161,7 @@ namespace gluk
 		virtual void update();
 
 		template <typename T>
-		void set_uniform(const string& id, const T& value, bool fail_on_nfind = false)
+		void set_uniform(const string& id, const T& value, bool fail_on_nfind = true)
 		{
 			GLint ix = -1;
 			auto ui = uniform_index_cache.find(id);
