@@ -31,13 +31,14 @@ namespace gluk
 		}
 	
 
-		camera::camera(vec2 ss, vec3 p, vec3 t, vec3 u, float fov)
-			: _pos(p), _look(t - p), _up(u), _fov(fov), _nz(0.01f), _fz(1000.f)
+		camera::camera(vec2 ss, vec3 p, vec3 t, vec3 u, float fov, float nz, float fz)
+			: _pos(p), _look(t - p), _up(u), _fov(fov), _nz(nz), _fz(fz)
 		{
 			_right = cross(_up, _look);
 			update_view();
 			update_proj(ss);
 		}
+
 
 		void camera::update_proj(vec2 size)
 		{

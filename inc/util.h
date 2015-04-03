@@ -25,7 +25,8 @@ namespace gluk
 			vec3 _pos, _look, _up, _right;
 		public:
 			camera() {}
-			camera(vec2 ss, vec3 p, vec3 t, vec3 u = vec3(0.f, 1.f, 0.f), float fov = radians(45.f));
+			camera(vec2 ss, vec3 p, vec3 t, vec3 u = vec3(0.f, 1.f, 0.f), float fov = radians(45.f),
+				float nz = 0.5f, float fz = 500.f);
 
 			void update_proj(vec2 size);
 			void update_view();
@@ -39,8 +40,8 @@ namespace gluk
 			propr(vec3, position, { return _pos; });
 
 			propr(float, fov, { return _fov; });
-			propr(float, near_z, { return _nz; });
-			propr(float, far_z, { return _fz; });
+			proprw(float, near_z, { return _nz; });
+			proprw(float, far_z, { return _fz; });
 
 			propr(vec3, target, { return _pos + _look; });
 			inline void target(vec3 p) { _look = p - _pos; }

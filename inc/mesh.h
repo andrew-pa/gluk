@@ -147,6 +147,7 @@ namespace gluk
 		GLuint vtx_buf;
 		GLuint idx_buf;
 	public:
+		
 		interleaved_mesh(const vector<vertex_type>& vs, const vector<index_type>& is, 
 			const string& name)
 			: mesh(name), vtx_cnt(vs.size()), idx_cnt(is.size())
