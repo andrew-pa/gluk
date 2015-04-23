@@ -47,6 +47,12 @@ using namespace glm;
 #define GLFW
 #include <GLFW/glfw3.h>
 
+extern "C" 
+{
+	#include <SOIL.h>
+}
+#pragma comment (lib, "SOIL.lib")
+
 #define glerr 
 //{auto err = glGetError(); if(err != 0) { char s[16]; sprintf(s, "GL Error: %08X\n", err); OutputDebugStringA(s); throw; }}
 

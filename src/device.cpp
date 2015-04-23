@@ -1,5 +1,6 @@
 #include "device.h"
 #include "render_target.h"
+#include "shader.h"
 
 namespace gluk
 {
@@ -136,5 +137,68 @@ namespace gluk
 	{
 		previously_alloced_ubbi.push(ubbi);
 		ubbi = -1;
+	}
+
+	static void validate_shader(GLuint shader, const string& fn)
+	{
+		char buf[512];
+		GLsizei len = 0;
+		//OutputDebugStringA(fn.c_str());
+		glGetShaderInfoLog(shader, 512, &len, buf);
+		if (len > 0)
+		{
+			ostringstream oss;
+			oss << "Shader " << shader << " (" << ")" << " error: " << buf;
+			OutputDebugStringA(oss.str().c_str());
+			throw exception(oss.str().c_str());
+		}
+	}
+
+	static GLuint compile_shader(GLenum type, const filedatasp fd)
+	{
+		GLuint sh = glCreateShader(type);
+		string vssd = string(fd->data<char>(), fd->data<char>() + fd->length());
+		const GLchar* vsd = (GLchar*)vssd.data();
+		const GLint vsl = vssd.size();
+		glShaderSource(sh, 1, &vsd, &vsl);
+		glCompileShader(sh);
+		validate_shader(sh, vssd);
+		return sh;
+	}
+
+	GLint device::load_shader(const string& path, const filedatasp data, GLenum type)
+	{
+		auto shc = shader_cashe.find(path);
+		if(shc == shader_cashe.end())
+		{
+			shader_cashe[path] = tuple<GLint, int>(compile_shader(type, data), 1);
+			return get<0>(shader_cashe[path]);
+		}
+		else
+		{
+			get<1>(shc->second)++;
+			return get<0>(shc->second);
+		}
+	}
+
+	void device::delete_shader(GLint id)
+	{
+		auto s = find_if(shader_cashe.begin(), shader_cashe.end(), [&](pair<string,tuple<GLint, int>> v)
+		{
+			return get<0>(v.second) == id;
+		});
+		if(s != shader_cashe.end())
+		{
+			get<1>(s->second)--;
+			if(get<1>(s->second) <= 0)
+			{
+				glDeleteShader(get<0>(s->second));
+				shader_cashe.erase(s);
+			}
+		}
+		else
+		{
+			glDeleteShader(id);//was not in cashe
+		}
 	}
 }

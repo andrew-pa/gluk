@@ -12,10 +12,10 @@ namespace gluk
 		{
 			mesh* fsq;
 		public:
-			full_screen_quad_shader(const filedatasp ps, const filedatasp vs = nullptr);
+			full_screen_quad_shader(device* dev, const filedatasp ps, const filedatasp vs = nullptr);
 			~full_screen_quad_shader();
 
-			void draw(device* dev, float t);
+			void draw(float t);
 		};
 
 		class camera

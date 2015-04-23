@@ -17,20 +17,6 @@ namespace gluk
 		}
 	}
 
-	/*static GLuint compile_shader(GLenum type, const datablob<glm::byte>& fdata, GLuint _program)
-	{
-		GLuint sh = glCreateShader(type);
-		string vssd = string((char*)fdata.data, fdata.length + (char*)fdata.data);
-		const GLchar* vsd = (GLchar*)vssd.data();
-		const GLint vsl = vssd.size();
-		//OutputDebugStringA(vsd);
-		glShaderSource(sh, 1, &vsd, &vsl);
-		glCompileShader(sh);
-		validate_shader(sh, vsd);
-		glAttachShader(_program, sh);
-		return sh;
-	}*/
-
 	static GLuint compile_shader(GLenum type, const filedatasp fd, GLuint _program)
 	{
 		GLuint sh = glCreateShader(type);
@@ -44,48 +30,8 @@ namespace gluk
 		return sh;
 	}
 
-	/*shader::shader(const datablob<glm::byte>& vs_data, const datablob<glm::byte>& ps_data, const datablob<glm::byte>& gs_data)
-	{
-		_id = glCreateProgram();
-		if(!vs_data.empty())
-		{
-			_idvp = compile_shader(GL_VERTEX_SHADER, vs_data, _id);
-		}
-
-		if (!gs_data.empty())
-		{
-			_idgp = compile_shader(GL_GEOMETRY_SHADER, gs_data, _id);
-		}
-
-		if(!ps_data.empty())
-		{
-			_idfp = compile_shader(GL_FRAGMENT_SHADER, ps_data, _id);
-		}
-
-
-		glLinkProgram(_id);
-
-		{
-			char buf[512];
-			GLsizei len = 0;
-			glGetProgramInfoLog(_id, 512, &len, buf);
-			if (len > 0)
-			{
-				ostringstream oss;
-				oss << "GL Program error: " << buf << endl;
-				OutputDebugStringA(oss.str().c_str());
-				throw exception(oss.str().c_str());
-			}
-			glValidateProgram(_id);
-			GLint sta;
-			glGetProgramiv(_id, GL_VALIDATE_STATUS, &sta);
-			//if (sta == GL_FALSE) throw exception("error validating shader");
-		}
-
-
-	}*/
-
-	shader::shader(const filedatasp vs_data, const filedatasp ps_data, const filedatasp gs_data)
+	shader::shader(device* dev, const filedatasp vs_data, const filedatasp ps_data, const filedatasp gs_data)
+		: _dev(dev)
 	{
 		_id = glCreateProgram();
 		if (vs_data != nullptr)
@@ -105,6 +51,50 @@ namespace gluk
 			string sbuf(buf);
 			ostringstream oss;
 			if(sbuf.find("warning") != sbuf.npos)
+			{
+				oss << "GL Program warning: " << sbuf << endl;
+				OutputDebugStringA(oss.str().c_str());
+			}
+			else
+			{
+				oss << "GL Program error: " << sbuf << endl;
+				OutputDebugStringA(oss.str().c_str());
+				throw exception(oss.str().c_str());
+			}
+		}
+		glerr
+	}
+
+	shader::shader(device* dev, const package& pak, const string& vs_path, const string& ps_path, const string& gs_path)
+		: _dev(dev)
+	{
+		_id = glCreateProgram();
+		if (!vs_path.empty())
+		{
+			_idvp = dev->load_shader(vs_path, pak.open(vs_path), GL_VERTEX_SHADER);
+			glAttachShader(_id, _idvp);
+		}
+		if (!gs_path.empty())
+		{
+			_idgp = dev->load_shader(gs_path, pak.open(gs_path), GL_GEOMETRY_SHADER);
+			glAttachShader(_id, _idgp);
+		}
+		if (!ps_path.empty())
+		{
+			_idfp = dev->load_shader(ps_path, pak.open(ps_path), GL_FRAGMENT_SHADER);
+			glAttachShader(_id, _idfp);
+		}
+
+		glLinkProgram(_id);
+
+		char buf[512];
+		GLsizei len = 0;
+		glGetProgramInfoLog(_id, 512, &len, buf);
+		if (len > 0)
+		{
+			string sbuf(buf);
+			ostringstream oss;
+			if (sbuf.find("warning") != sbuf.npos)
 			{
 				oss << "GL Program warning: " << sbuf << endl;
 				OutputDebugStringA(oss.str().c_str());
@@ -167,9 +157,10 @@ namespace gluk
 		glDetachShader(_id, _idgp);
 		glDetachShader(_id, _idfp);
 
-		glDeleteShader(_idfp);
-		glDeleteShader(_idvp);
-		glDeleteShader(_idgp);
+		_dev->delete_shader(_idfp);
+		_dev->delete_shader(_idvp);
+		_dev->delete_shader(_idgp);
+		
 		glDeleteProgram(_id);
 	}
 }

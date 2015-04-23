@@ -1,6 +1,9 @@
 #pragma once
 #include "cmmn.h"
+#define GLI //for now
+#ifdef GLI
 #include <gli/gli.hpp>
+#endif
 
 namespace gluk
 {
@@ -45,6 +48,15 @@ namespace gluk
 	protected:
 		size_vec_t _size;
 		GLuint _txid;
+
+		void get_size_from_opengl()
+		{
+			bind(16);
+			glGetTexLevelParameteriv(detail::texture_target_enum_from_dim<Dim, ArraySize>::value, 0, GL_TEXTURE_WIDTH, (GLint*)&_size[0]);
+			if (_size.length() > 1) glGetTexLevelParameteriv(detail::texture_target_enum_from_dim<Dim, ArraySize>::value, 0, GL_TEXTURE_HEIGHT, (GLint*)&_size[1]);
+			if (_size.length() > 2) glGetTexLevelParameteriv(detail::texture_target_enum_from_dim<Dim, ArraySize>::value, 0, GL_TEXTURE_DEPTH, (GLint*)&_size[2]);
+			unbind(16);
+		}
 	public:
 		texture(size_vec_t s)
 			: _size(s)
@@ -61,6 +73,12 @@ namespace gluk
 		texture(GLuint glid, size_vec_t s)
 			: _size(s), _txid(glid) 
 		{
+		}
+
+		texture(GLuint glid)
+			: _txid(glid)
+		{
+			get_size_from_opengl();
 		}
 
 		void bind(int slot) const
@@ -111,6 +129,14 @@ namespace gluk
 
 	class texture2d : public texture<2>
 	{
+		GLuint load_texture_with_SOIL(const filedatasp data)
+		{
+/*			unsigned char* d = new unsigned char[data->length()];
+			memcpy(d, data->data<void>(), data->length());
+			auto r = SOIL_load_OGL_texture_from_memory(d, data->length(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,0);
+			delete d;
+			return r;*/
+		}
 	public:
 		texture2d(const pixel_format& fmt, size_vec_t size_, void* data = nullptr)
 			: texture(size_)
@@ -122,6 +148,7 @@ namespace gluk
 			glerr
 		}
 
+#ifdef GLI
 		texture2d(const gli::texture2D& tex)
 			: texture(tex.dimensions())
 		{
@@ -160,6 +187,32 @@ namespace gluk
 				}
 			}
 			glerr
+		}
+#endif
+
+		texture2d(const filedatasp data)
+			: texture(vec2(0))
+		{
+			int chnl = 0;
+			
+			auto b = SOIL_load_image_from_memory(data->data<unsigned char>(), data->length(), 
+				(int*)&_size[0], (int*)&_size[1], &chnl, 0);
+			GLint fmt = GL_R;
+			switch (chnl)
+			{
+			case 1: fmt = GL_R;		break;
+			case 2: fmt = GL_RG;	break;
+			case 3: fmt = GL_RGB;	break;
+			case 4: fmt = GL_RGBA;	break;
+			}
+
+			glBindTexture(GL_TEXTURE_2D, _txid);
+			glTexImage2D(GL_TEXTURE_2D, 0, fmt, _size.x, _size.y, 0,
+				fmt, GL_UNSIGNED_BYTE, b);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
+			//_txid = load_texture_with_SOIL(data);
+			//get_size_from_opengl();
 		}
 	};
 

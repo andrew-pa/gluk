@@ -148,12 +148,14 @@ namespace gluk
 	class shader
 	{
 	protected:
+		device* _dev;
 		GLuint _id, _idvp, _idfp, _idgp;
 		map<string, GLint> uniform_index_cache;
 	public:
 		/*shader(const datablob<glm::byte>& vs_data, const datablob<glm::byte>& ps_data = datablob<glm::byte>(),
 			const datablob<glm::byte>& gs_data = datablob<glm::byte>());*/
-		shader(const filedatasp vs_data, const filedatasp ps_data = nullptr, const filedatasp gs_data = nullptr);
+		shader(device* dev, const filedatasp vs_data, const filedatasp ps_data = nullptr, const filedatasp gs_data = nullptr);
+		shader(device* dev, const package& pak, const string& vs_path, const string& ps_path = "", const string& gs_path = "");
 		~shader();
 
 		virtual void bind();
@@ -187,9 +189,9 @@ namespace gluk
 
 		template <typename T>
 		//WARNING: This function returns a new UBO each time!
-		uniform_buffer<T>* get_uniform_buffer(device* dev, const string& id)
+		uniform_buffer<T>* get_uniform_buffer(const string& id)
 		{
-			return new uniform_buffer<T>(dev, _id, glGetUniformBlockIndex(_id, id.c_str()));
+			return new uniform_buffer<T>(_dev, _id, glGetUniformBlockIndex(_id, id.c_str()));
 		}
 
 		template <int Dim, int AS = 1>

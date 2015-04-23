@@ -19,6 +19,11 @@ namespace gluk
 		void free_ubbi(uint& ubbi);
 		template <typename T>
 		friend class uniform_buffer;
+
+		map<string, tuple<GLint, int>> shader_cashe;
+		GLint load_shader(const string& path, const filedatasp data, GLenum type);
+		void delete_shader(GLint id);
+		friend class shader;
 	public:
 		device(vec2 s_, GLFWwindow* w_, uint aal);
 		~device();

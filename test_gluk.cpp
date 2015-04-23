@@ -31,9 +31,10 @@ class test_app : public app
 public:
 	test_app()
 		: app("test", vec2(640, 480), 1),
-		s(default_package.open("basic.vs.glsl"), default_package.open("basic.ps.glsl")),
+		s(dev, default_package, "basic.vs.glsl", "basic.ps.glsl"),//default_package.open("basic.vs.glsl"), default_package.open("basic.ps.glsl")),
 		//s(read_data_from_package(L"basic.vs.glsl"), read_data_from_package(L"basic.ps.glsl")),
-		tex(gli::texture2D(gli::load_dds("test.dds"))), rtx(vec2(1024))
+		tex(default_package.open("test.tga"))//gli::texture2D(gli::load_dds("test.dds")))
+		, rtx(vec2(1024))
 	{
 		glerr
 		tex.bind(0);
