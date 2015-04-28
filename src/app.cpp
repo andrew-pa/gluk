@@ -48,8 +48,39 @@ namespace gluk
 		{
 			auto t = (app*)glfwGetWindowUserPointer(wnd);
 			t->key_down(key, (key_action)action, (key_mod)mods);
+			for(auto& ih : t->input_handlers) {
+				ih->key_handler(t, key, (input_action)action, (input_mod)mods);
+			}
+		});
+
+		glfwSetCharModsCallback(wnd, [](GLFWwindow* wnd, uint cp, int mods) {
+			auto t = (app*)glfwGetWindowUserPointer(wnd);
+			for (auto& ih : t->input_handlers) {
+				ih->char_handler(t, cp, (input_mod)mods);
+			}
 		});
 		
+		glfwSetCursorPosCallback(wnd, [](GLFWwindow* wnd, double x, double y) {
+			auto t = (app*)glfwGetWindowUserPointer(wnd);
+			for (auto& ih : t->input_handlers) {
+				ih->mouse_position_handler(t, vec2(x, y));
+			}
+		});
+
+		glfwSetCursorEnterCallback(wnd, [](GLFWwindow* wnd, int entered) {
+			auto t = (app*)glfwGetWindowUserPointer(wnd);
+			for (auto& ih : t->input_handlers) {
+				ih->mouse_enterleave_handler(t, entered);
+			}
+		});
+
+		glfwSetMouseButtonCallback(wnd, [](GLFWwindow* wnd, int button, int action, int mods) {
+			auto t = (app*)glfwGetWindowUserPointer(wnd);
+			for (auto& ih : t->input_handlers) {
+				ih->mouse_button_handler(t, (mouse_button)button, (input_action)action, (input_mod)mods);
+			}
+		});
+
 		glerr
 		dev = new device(winsize, wnd, aa_samples);
 		glerr

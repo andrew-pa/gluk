@@ -1,6 +1,8 @@
+#pragma once
 #include "cmmn.h"
 #include "shader.h"
 #include "mesh.h"
+#include "app.h"
 
 namespace gluk
 {
@@ -62,6 +64,64 @@ namespace gluk
 			tuple<vec3, vec3, vec3> basis()
 			{
 				return tuple<vec3, vec3, vec3>(_look, _up, _right);
+			}
+		};
+
+		struct fps_camera_controller : public input_handler {
+		protected:
+			vec3 cam_pos_v; vec2 cam_rot_v; vec2 tot_cam_rot;
+		public:
+			camera& cam;
+			vec3 linear_speed;
+			vec2 rotational_speed;
+			fps_camera_controller(camera& c, vec3 lin_speed = vec3(7.f, 10.f, 5.f), vec2 rot_speed = vec2(1.f)) 
+				: cam(c), linear_speed(lin_speed), rotational_speed(rot_speed) {
+			}
+
+			virtual void key_handler(app* _app, uint key, input_action action, input_mod mods) {
+				if (action == key_action::press)
+				{
+					if (key == GLFW_KEY_W)
+						cam_pos_v.x = 1;
+					else if (key == GLFW_KEY_S)
+						cam_pos_v.x = -1;
+					else if (key == GLFW_KEY_A)
+						cam_pos_v.y = -1;
+					else if (key == GLFW_KEY_D)
+						cam_pos_v.y = 1;
+					else if (key == GLFW_KEY_Q)
+						cam_pos_v.z = 1;
+					else if (key == GLFW_KEY_E)
+						cam_pos_v.z = -1;
+				}
+				else if (action == key_action::release)
+				{
+					if (key == GLFW_KEY_W || key == GLFW_KEY_S)
+						cam_pos_v.x = 0.f;
+					else if (key == GLFW_KEY_A || key == GLFW_KEY_D)
+						cam_pos_v.y = 0.f;
+					else if (key == GLFW_KEY_Q || key == GLFW_KEY_E)
+						cam_pos_v.z = 0.f;
+				}
+			}
+
+			virtual void mouse_position_handler(app* _app, vec2 _p) {
+				if (glfwGetInputMode(_app->wnd, GLFW_CURSOR) != GLFW_CURSOR_DISABLED)
+					glfwSetInputMode(_app->wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+				auto smid = _app->dev->size();
+				vec2 np = (_p/smid)*2.f - vec2(1.f);
+				cam_rot_v = np*60.f;
+				glfwSetCursorPos(_app->wnd, smid.x*0.5f, smid.y*0.5f);
+			}
+
+			void update(float t, float dt) {
+				cam.fwd(cam_pos_v.x*dt*linear_speed.x);
+				cam.straft(cam_pos_v.y*dt*linear_speed.y);
+				cam.move_up(cam_pos_v.z*dt*linear_speed.z);
+				cam.transform(rotate(mat4(1), cam_rot_v.x*dt*rotational_speed.x, vec3(0.f, 1.f, 0.f))); 
+				cam.pitch(cam_rot_v.y*dt*rotational_speed.y);
+				cam_rot_v = vec2(0.f);
+				cam.update_view();
 			}
 		};
 	}

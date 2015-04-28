@@ -4,7 +4,11 @@
 #include "shader.h"
 #include "texture.h"
 #include "render_target.h"
+#include "util.h"
 #include <gli/gli.hpp>
+
+#include "ft2build.h"
+#include FT_FREETYPE_H
 
 using namespace gluk;
 
@@ -17,15 +21,16 @@ vec4 texture_data[] =
 };
 
 
-class test_app : public app
+class test_app : public app, public input_handler
 {
 	mesh* torus; mat4 torus_world;
 	mesh* screen;
 	shader s;
 	texture2d tex;
 	render_texture2d rtx;
-	mat4 view, proj;
-
+	//mat4 view, proj;
+	util::camera cam;
+	shared_ptr<util::fps_camera_controller> fpscamcntrl;
 	GLuint fbo;
 	GLuint rbo, frx;
 public:
@@ -34,7 +39,8 @@ public:
 		s(dev, default_package, "basic.vs.glsl", "basic.ps.glsl"),//default_package.open("basic.vs.glsl"), default_package.open("basic.ps.glsl")),
 		//s(read_data_from_package(L"basic.vs.glsl"), read_data_from_package(L"basic.ps.glsl")),
 		tex(default_package.open("test.tga"))//gli::texture2D(gli::load_dds("test.dds")))
-		, rtx(vec2(1024))
+		, rtx(vec2(1024)), clear_color(0.1f, 0.3f, 0.8f, 1.f), cam(dev->size(), vec3(0.01f, 3.f, -7.f), vec3(0.f), vec3(0.f, 1.f, 0.f)),
+		fpscamcntrl(make_shared<util::fps_camera_controller>(cam))
 	{
 		glerr
 		tex.bind(0);
@@ -83,18 +89,34 @@ public:
 		screen = new interleaved_mesh<vertex_position_normal_texture, uint16>(
 			generate_plane<vertex_position_normal_texture, uint16>(vec2(3), vec2(16), vec3(0,0,1)), string("video_screen"));
 		
-		view = lookAt(vec3(0.01f,3.f,-7.f), vec3(0.f), vec3(0.f, 1.f, 0.f));
-		proj = perspectiveFov(radians(45.f), dev->size().x, dev->size().y, 0.01f, 1000.f);
+		input_handlers.push_back(this);
+		input_handlers.push_back(fpscamcntrl.get());
+
+		FT_Library lib;
+		FT_Init_FreeType(&lib);
+	}
+
+	vec4 clear_color;
+	void mouse_enterleave_handler(app* _app, bool entered)
+	{
+		auto t = (test_app*)_app;
+		if(entered) {
+			t->clear_color = vec4(0.1f, 0.3f, 0.8f, 1.f);
+		}
+		else {
+			t->clear_color = vec4(0.8f, 0.1f, 0.3f, 1.f);
+		}
 	}
 
 	void resize() override
 	{
-		proj = perspectiveFov(radians(45.f), dev->size().x, dev->size().y, 0.01f, 1000.f);
+		cam.update_proj(dev->size());
 	}
 
 	void update(float t, float dt) override
 	{
 		torus_world = rotate(translate(mat4(1), vec3(0.f, 1.4f, 0.f)), t, vec3(.6f, .5f, .4f));
+		fpscamcntrl->update(t, dt);
 	}
 
 	void render(float t, float dt) override
@@ -125,16 +147,16 @@ public:
 		torus->draw();
 		tex.unbind(0);
 		s.unbind();
-		glClearColor(0.0f, 1.0f, 0.f, 1.0f);
+		glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 		dev->pop_render_target();
 		
-
+		
 		//glViewport(0, 0, dev->size().x, dev->size().y);
 		s.bind();
 		
 		s.set_uniform("world", translate(mat4(1), vec3(1.7f, 0.f, 0.f)));
 		s.set_uniform("itworld", inverse(transpose(translate(mat4(1), vec3(1.7f, 0.f, 0.f)))));
-		s.set_uniform("view_proj", proj*view);
+		s.set_uniform("view_proj", cam.proj()*cam.view());
 		//tex.bind(0);
 		//s.set_uniform("tex", 0);
 		//s.set_texture("tex", tex, 0);

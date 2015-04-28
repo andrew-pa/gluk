@@ -97,6 +97,7 @@ namespace gluk
 			: pos(p), norm(n), tang(tg), tex(t)
 		{
 		}
+
 	};
 
 	//prim_draw_type
