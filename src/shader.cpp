@@ -108,7 +108,8 @@ namespace gluk
 		}
 		glerr
 	}
-	
+
+
 	void shader::validate()
 	{
 		glValidateProgram(_id);

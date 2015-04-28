@@ -10,6 +10,8 @@
 #include "ft2build.h"
 #include FT_FREETYPE_H
 
+#include "renderer2d.h"
+
 using namespace gluk;
 
 vec4 texture_data[] =
@@ -33,6 +35,9 @@ class test_app : public app, public input_handler
 	shared_ptr<util::fps_camera_controller> fpscamcntrl;
 	GLuint fbo;
 	GLuint rbo, frx;
+
+	graphics2d::renderer2d rndr2d;
+	graphics2d::font fnt;
 public:
 	test_app()
 		: app("test", vec2(640, 480), 1),
@@ -40,7 +45,8 @@ public:
 		//s(read_data_from_package(L"basic.vs.glsl"), read_data_from_package(L"basic.ps.glsl")),
 		tex(default_package.open("test.tga"))//gli::texture2D(gli::load_dds("test.dds")))
 		, rtx(vec2(1024)), clear_color(0.1f, 0.3f, 0.8f, 1.f), cam(dev->size(), vec3(0.01f, 3.f, -7.f), vec3(0.f), vec3(0.f, 1.f, 0.f)),
-		fpscamcntrl(make_shared<util::fps_camera_controller>(cam))
+		fpscamcntrl(make_shared<util::fps_camera_controller>(cam)), rndr2d(dev, default_package),
+		fnt(rndr2d, "C:\\Windows\\Fonts\\consola.ttf", 16.f)
 	{
 		glerr
 		tex.bind(0);
@@ -121,6 +127,7 @@ public:
 
 	void render(float t, float dt) override
 	{
+
 		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		glViewport(0, 0, 1024, 1024);
@@ -150,7 +157,6 @@ public:
 		glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 		dev->pop_render_target();
 		
-		
 		//glViewport(0, 0, dev->size().x, dev->size().y);
 		s.bind();
 		
@@ -178,6 +184,18 @@ public:
 		//glBindTexture(GL_TEXTURE_2D, 0);
 		s.unbind();
 
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		rndr2d.begin_draw();
+		rndr2d.draw_rect(vec2(0.f, sin(t*3.f)*60.f), vec2(60.f), vec4(1.f, 0.5f, 0.f, .5f));
+		rndr2d.draw_rect(vec2(30.f, sin(t*3.f)*60.f), vec2(60.f), vec4(.5f, 1.f, 0.f, .5f));
+		rndr2d.draw_rect(vec2(-300.f), vec2(100.f), vec4(1.f), &tex);
+		vec2 fps_pos = vec2(-dev->size().x + 20.f, dev->size().y - 40.f);
+		rndr2d.draw_rect(fps_pos+vec2(0.f, 10.f), vec2(300.f, 32.f), vec4(.3f, .3f, .3f, .8f));
+		ostringstream oss;
+		oss << "FPS: " << 1.f / dt << "";
+		rndr2d.draw_string(fps_pos, oss.str(), fnt, vec4(1.f, 0.5f, 0.f, 1.f));
+		rndr2d.end_draw();
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 };
 

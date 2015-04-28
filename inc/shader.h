@@ -8,7 +8,7 @@ namespace gluk
 {
 
 	template <typename T>
-	struct glSetUniformResolve { static void set(GLint l, const T& v) {} };
+	struct glSetUniformResolve { static void set(GLint l, const T& v) { throw; } };
 #pragma region glSetUniformResolve<X>
 	template<>
 	struct glSetUniformResolve<float>
@@ -39,7 +39,8 @@ namespace gluk
 	{
 		static void set(GLint l, const vec4& v)
 		{
-			glUniform4fv(l, 4, &v[0]);
+			glUniform4f(l, v.x, v.y, v.z, v.w);
+			//glUniform4fv(l, 4, &v[0]);
 		}
 	};
 
@@ -100,6 +101,14 @@ namespace gluk
 			glUniformMatrix4fv(l, 1, GL_FALSE, &v[0][0]);
 		}
 	};
+
+	template<>
+	struct glSetUniformResolve<bool>
+	{
+		static void set(GLint l, const bool& v) {
+			glUniform1i(l, (GLint)v);
+		}
+	};
 #pragma endregion
 
 	template <typename T>
@@ -151,6 +160,7 @@ namespace gluk
 		device* _dev;
 		GLuint _id, _idvp, _idfp, _idgp;
 		map<string, GLint> uniform_index_cache;
+
 	public:
 		/*shader(const datablob<glm::byte>& vs_data, const datablob<glm::byte>& ps_data = datablob<glm::byte>(),
 			const datablob<glm::byte>& gs_data = datablob<glm::byte>());*/

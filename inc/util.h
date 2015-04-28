@@ -69,16 +69,23 @@ namespace gluk
 
 		struct fps_camera_controller : public input_handler {
 		protected:
-			vec3 cam_pos_v; vec2 cam_rot_v; vec2 tot_cam_rot;
+			vec3 cam_pos_v; vec2 cam_rot_v; vec2 tot_cam_rot; 
 		public:
 			camera& cam;
 			vec3 linear_speed;
 			vec2 rotational_speed;
+			bool mouse_disabled;
+			uint normal_cursor_mode;
 			fps_camera_controller(camera& c, vec3 lin_speed = vec3(7.f, 10.f, 5.f), vec2 rot_speed = vec2(1.f)) 
-				: cam(c), linear_speed(lin_speed), rotational_speed(rot_speed) {
+				: cam(c), linear_speed(lin_speed), rotational_speed(rot_speed), mouse_disabled(false), normal_cursor_mode(GLFW_CURSOR_NORMAL) {
 			}
 
 			virtual void key_handler(app* _app, uint key, input_action action, input_mod mods) {
+				if(key == GLFW_KEY_F1 && action == input_action::release) {
+					mouse_disabled = !mouse_disabled;
+					if (glfwGetInputMode(_app->wnd, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
+						glfwSetInputMode(_app->wnd, GLFW_CURSOR, normal_cursor_mode);
+				}
 				if (action == key_action::press)
 				{
 					if (key == GLFW_KEY_W)
@@ -106,12 +113,14 @@ namespace gluk
 			}
 
 			virtual void mouse_position_handler(app* _app, vec2 _p) {
-				if (glfwGetInputMode(_app->wnd, GLFW_CURSOR) != GLFW_CURSOR_DISABLED)
-					glfwSetInputMode(_app->wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-				auto smid = _app->dev->size();
-				vec2 np = (_p/smid)*2.f - vec2(1.f);
-				cam_rot_v = np*60.f;
-				glfwSetCursorPos(_app->wnd, smid.x*0.5f, smid.y*0.5f);
+				if(!mouse_disabled) {
+					if (glfwGetInputMode(_app->wnd, GLFW_CURSOR) != GLFW_CURSOR_DISABLED)
+						glfwSetInputMode(_app->wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+					auto smid = _app->dev->size();
+					vec2 np = (_p/smid)*2.f - vec2(1.f);
+					cam_rot_v = np*60.f;
+					glfwSetCursorPos(_app->wnd, smid.x*0.5f, smid.y*0.5f);
+				}
 			}
 
 			void update(float t, float dt) {

@@ -92,11 +92,11 @@ namespace gluk
 
 	enum class pixel_type
 	{
-		unorm = GL_UNSIGNED_INT,
-		snorm = GL_SHORT, 
-		floatp = GL_FLOAT, 
-		integer = GL_INT, 
-		uinteger = GL_UNSIGNED_INT,
+		unorm,
+		snorm, 
+		floatp, 
+		integer, 
+		uinteger,
 	};
 
 	struct pixel_format

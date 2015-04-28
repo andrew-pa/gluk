@@ -214,6 +214,9 @@ namespace gluk
 			//_txid = load_texture_with_SOIL(data);
 			//get_size_from_opengl();
 		}
+
+		texture2d(GLuint id)
+			: texture(id) {}
 	};
 
 	namespace detail
