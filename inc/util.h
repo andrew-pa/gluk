@@ -86,6 +86,7 @@ namespace gluk
 					if (glfwGetInputMode(_app->wnd, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
 						glfwSetInputMode(_app->wnd, GLFW_CURSOR, normal_cursor_mode);
 				}
+
 				if (action == key_action::press)
 				{
 					if (key == GLFW_KEY_W)
