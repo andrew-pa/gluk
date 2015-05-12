@@ -29,10 +29,10 @@ else()
 endif()
 
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc/gluk)
 add_definitions(${GLOBAL_DEFINES})
 
-file(GLOB SOURCES src/*.cpp inc/*.h)
+file(GLOB SOURCES src/*.cpp inc/*/*.h)
 
 add_library(gluk ${SOURCES})
 add_executable(test_gluk test_gluk.cpp)

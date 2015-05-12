@@ -48,6 +48,9 @@ public:
 		fpscamcntrl(make_shared<util::fps_camera_controller>(cam)), rndr2d(dev, default_package),
 		fnt(rndr2d, "C:\\Windows\\Fonts\\consola.ttf", 16.f)
 	{
+		mat4 m = translate(mat4(1), vec3(8.f, 7.f, 6.f));
+		vec4 a = m*vec4(0.f, 0.f, 0.f, 1.f);
+		vec4 b = m[3];
 		glerr
 		tex.bind(0);
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -64,7 +67,7 @@ public:
 		rtx.wrap(GL_REPEAT, GL_REPEAT, GL_REPEAT);
 		rtx.unbind(0);
 		*/
-		
+
 		glGenFramebuffers(1, &fbo);
 		glerr
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -94,7 +97,7 @@ public:
 
 		screen = new interleaved_mesh<vertex_position_normal_texture, uint16>(
 			generate_plane<vertex_position_normal_texture, uint16>(vec2(3), vec2(16), vec3(0,0,1)), string("video_screen"));
-		
+
 		input_handlers.push_back(this);
 		input_handlers.push_back(fpscamcntrl.get());
 
@@ -156,10 +159,10 @@ public:
 		s.unbind();
 		glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 		dev->pop_render_target();
-		
+
 		//glViewport(0, 0, dev->size().x, dev->size().y);
 		s.bind();
-		
+
 		s.set_uniform("world", translate(mat4(1), vec3(1.7f, 0.f, 0.f)));
 		s.set_uniform("itworld", inverse(transpose(translate(mat4(1), vec3(1.7f, 0.f, 0.f)))));
 		s.set_uniform("view_proj", cam.proj()*cam.view());
@@ -171,7 +174,7 @@ public:
 		screen->draw();
 		glBindTexture(GL_TEXTURE_2D, 0);
 		//tex.unbind(0);
-		
+
 		s.set_uniform("world", translate(mat4(1), vec3(-1.7f, 0.f, 0.f)));
 		s.set_uniform("itworld", inverse(transpose(translate(mat4(1), vec3(-1.7f, 0.f, 0.f)))));
 		//rtx.bind(0);
