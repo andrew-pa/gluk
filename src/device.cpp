@@ -139,39 +139,64 @@ namespace gluk
 		ubbi = -1;
 	}
 
-	static void validate_shader(GLuint shader, const string& fn)
-	{
-		char buf[512];
-		GLsizei len = 0;
-		//OutputDebugStringA(fn.c_str());
-		glGetShaderInfoLog(shader, 512, &len, buf);
-		if (len > 0)
-		{
-			ostringstream oss;
-			oss << "Shader " << shader << " (" << ")" << " error: " << buf;
-			OutputDebugStringA(oss.str().c_str());
-			throw exception(oss.str().c_str());
-		}
-	}
-
-	static GLuint compile_shader(GLenum type, const filedatasp fd)
+	static GLuint compile_shader(const string& path, GLenum type, const package& pak)
 	{
 		GLuint sh = glCreateShader(type);
+		auto fd = pak.open(path);
 		string vssd = string(fd->data<char>(), fd->data<char>() + fd->length());
+		//preprocessor
+		auto ppd = vssd.find_first_of("#");
+		while(ppd != string::npos) {
+			string cmd = "";
+			auto line_begin = ppd;
+			ppd++;
+			while (vssd[ppd] != ' ') cmd += vssd[ppd++];
+			auto line_end = vssd.find_first_of('\n', line_begin);
+			if(cmd == "include") {
+				auto first_quote = vssd.find_first_of('"', ppd);
+				auto last_quote = vssd.find_first_of('"', first_quote + 1);
+				if(first_quote == string::npos || last_quote == string::npos)
+					throw;
+				string path = vssd.substr(first_quote + 1, last_quote-first_quote-1);
+				ostringstream oss;
+				oss << "Including: " << path << endl;
+				OutputDebugStringA(oss.str().c_str());
+				auto nfd = pak.open(path);
+				string incssd = string(nfd->data<char>(), nfd->data<char>() + nfd->length());
+				incssd.append("\n#line 0");
+				vssd.replace(line_begin, line_end - line_begin, incssd);
+			}
+			ppd = vssd.find_first_of("#", ppd);
+		}
+		//------------
+	
 		const GLchar* vsd = (GLchar*)vssd.data();
 		const GLint vsl = vssd.size();
 		glShaderSource(sh, 1, &vsd, &vsl);
 		glCompileShader(sh);
-		validate_shader(sh, vssd);
+		GLint success = 0;
+		glGetShaderiv(sh, GL_COMPILE_STATUS, &success);
+		if(success == GL_FALSE) {
+			GLint log_size = 0;
+			glGetShaderiv(sh, GL_INFO_LOG_LENGTH, &log_size);
+			string log(log_size, ' ');
+			glGetShaderInfoLog(sh, log_size, &log_size, (GLchar*)log.data());
+			ostringstream oss;
+			oss << "Shader " << sh << " [@ " << path << "]" << " failed to compile!" << endl;
+			oss << "Compilation Log:" << endl << log << endl;
+			OutputDebugStringA(oss.str().c_str());
+			glDeleteShader(sh);
+			throw exception(oss.str().c_str());
+		}
 		return sh;
 	}
 
-	GLint device::load_shader(const string& path, const filedatasp data, GLenum type)
+	GLint device::load_shader(const string& path, const package& pak, GLenum type)
 	{
 		auto shc = shader_cashe.find(path);
 		if(shc == shader_cashe.end())
 		{
-			shader_cashe[path] = tuple<GLint, int>(compile_shader(type, data), 1);
+			shader_cashe[path] = tuple<GLint, int>(compile_shader(path, type, pak), 1);
 			return get<0>(shader_cashe[path]);
 		}
 		else

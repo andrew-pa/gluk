@@ -3,11 +3,144 @@
 #include "shader.h"
 #include "mesh.h"
 #include "app.h"
-
+#include "texture.h"
 namespace gluk
 {
 	namespace util 
 	{
+		namespace math {
+			struct aabb {
+				vec3 min, max;
+				aabb() : min(), max() {}
+				aabb(vec3 m, vec3 x) : min(m), max(x) {}
+
+				aabb(const aabb& a, const aabb& b) : min(), max() {
+					add_point(a.min);
+					add_point(a.max);
+					add_point(b.min);
+					add_point(b.max);
+				}
+
+				inline void add_point(vec3 p) {
+					if (p.x > max.x) max.x = p.x;
+					if (p.y > max.y) max.y = p.y;
+					if (p.z > max.z) max.z = p.z;
+
+					if (p.x < min.x) min.x = p.x;
+					if (p.y < min.y) min.y = p.y;
+					if (p.z < min.z) min.z = p.z;
+					//min = glm::min(min, p);
+					//max = glm::max(max, p);
+				}
+
+				inline aabb transform(const mat4& m) const {
+					vec3 nmin, nmax;
+					nmin = vec3(m[3][0], m[3][1], m[3][2]);
+					nmax = nmin;
+
+					for (int i = 0; i < 3; ++i)
+						for (int j = 0; j < 3; ++j) {
+							if (m[i][j] > 0) {
+								nmin[i] += m[i][j] * min[j];
+								nmax[i] += m[i][j] * max[j];
+							}
+							else {
+								nmin[i] += m[i][j] * max[j];
+								nmax[i] += m[i][j] * min[j];
+							}
+						}
+					return aabb(nmin, nmax);
+				}
+
+				inline vec3 p_vertex(vec3 n) const {
+					vec3 r = min;
+					if (n.x > 0) r.x += max.x;
+					if (n.y > 0) r.y += max.y;
+					if (n.z > 0) r.z += max.z;
+					return r;
+				}
+
+				inline vec3 n_vertex(vec3 n) const {
+					vec3 r = min;
+					if (n.x < 0) r.x += max.x;
+					if (n.y < 0) r.y += max.y;
+					if (n.z < 0) r.z += max.z;
+					return r;
+				}
+
+				inline vec3 center() const {
+					return (min + max) * 0.5f;
+				}
+				inline vec3 extents() const {
+					return (max - min);
+				}
+
+				inline void operator +=(const aabb& b) {
+					add_point(b.min);
+					add_point(b.max);
+				}
+
+				inline int max_extent() const
+				{
+					vec3 diag = max - min;
+					if (diag.x > diag.y && diag.x > diag.z)
+						return 0;
+					else if (diag.y > diag.z)
+						return 1;
+					else
+						return 2;
+				}
+
+				inline float surface_area() const
+				{
+					vec3 d = max - min;
+					return 2.f*(d.x*d.y + d.x*d.z + d.y*d.z);
+				}
+			};
+		
+			struct sphere {
+				vec3 pos; float radius;
+				sphere(vec3 p, float r) : pos(p), radius(r) {} 
+			};
+
+			struct frustrum {
+				vec3 normal[6];
+				float dist[6];
+				frustrum(const mat4& view, const mat4& proj) {
+					mat4 vp = proj*view;
+					vec4 plns[6];
+					plns[0] =  vp[0]  + vp[3];
+					plns[1] = -vp[0]  + vp[3];
+					plns[2] =  vp[1]  + vp[3];
+					plns[3] = -vp[1]  + vp[3];
+					plns[4] =  vp[2]  + vp[3];
+					plns[5] = -vp[2]  + vp[3];
+					for (uint i = 0; i < 6; ++i) {
+						normal[i] = normalize(vec3(plns[i]));
+						dist[i] = plns[i].w;
+					}
+				}
+
+				//'contains' functions are containment || intersection 
+				
+				inline bool contains(const sphere& s) const {
+					for (uint i = 0; i < 6; ++i) {
+						float d = dot(normal[i], s.pos) + dist[i];
+						if (d < -s.radius)
+							return false;
+					}
+					return true;
+				}
+
+				inline bool contains(const aabb& b) const {
+					for (uint i = 0; i < 6; ++i) {
+						if ((dist[i] + dot(normal[i], b.p_vertex(normal[i]))) < 0) return false;
+						if ((dist[i] + dot(normal[i], b.n_vertex(normal[i]))) < 0) return true;
+					}
+					return true;
+				}
+			};
+		}
 		//full_screen_quad_shader
 		//Renders a FSQ with the pixel shader given
 		class full_screen_quad_shader : public shader
@@ -64,6 +197,10 @@ namespace gluk
 			tuple<vec3, vec3, vec3> basis()
 			{
 				return tuple<vec3, vec3, vec3>(_look, _up, _right);
+			}
+
+			inline math::frustrum make_frustrum() const {
+				return math::frustrum(_view, _proj);
 			}
 		};
 
@@ -133,6 +270,33 @@ namespace gluk
 				cam_rot_v = vec2(0.f);
 				cam.update_view();
 			}
+		};
+
+		class texture_cashe {
+		protected:
+			const package& pak;
+			shared_ptr<texture2d> blank_texture;
+		public:
+			map<size_t, shared_ptr<texture2d>> textures;
+
+			texture_cashe(const package& _pak) : pak(_pak) {
+				vec4* v = new vec4(1.f);
+				blank_texture = make_shared<texture2d>(pixel_format(pixel_components::rgba, pixel_type::floatp, 32),
+					vec2(1), v);
+				delete v;
+				textures[hash<string>()("")] = blank_texture;
+			}
+
+			pair<size_t, shared_ptr<texture2d>> load_texture(const string& path) {
+				auto hpath = hash<string>()(path);
+				auto t = textures.find(hpath);
+				if(t == textures.end()) {
+					return make_pair(hpath, textures[hpath] = make_shared<texture2d>(pak.open(path)));
+				}
+				else return *t;
+			}
+
+
 		};
 	}
 }

@@ -88,7 +88,6 @@ namespace gluk
 		min_filter(GL_LINEAR);
 		mag_filter(GL_LINEAR);
 		wrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-		unbind(0);
 	}
 
 	render_texture_cube::~render_texture_cube()

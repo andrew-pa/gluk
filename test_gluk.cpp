@@ -30,6 +30,7 @@ class test_app : public app, public input_handler
 	shader s;
 	texture2d tex;
 	render_texture2d rtx;
+	multi_render_texture2d<3> nrtx;
 	//mat4 view, proj;
 	util::camera cam;
 	shared_ptr<util::fps_camera_controller> fpscamcntrl;
@@ -38,6 +39,9 @@ class test_app : public app, public input_handler
 
 	graphics2d::renderer2d rndr2d;
 	graphics2d::font fnt;
+
+	package ppp;
+	string mmm;
 public:
 	test_app()
 		: app("test", vec2(640, 480), 1),
@@ -46,7 +50,8 @@ public:
 		tex(default_package.open("test.tga"))//gli::texture2D(gli::load_dds("test.dds")))
 		, rtx(vec2(1024)), clear_color(0.1f, 0.3f, 0.8f, 1.f), cam(dev->size(), vec3(0.01f, 3.f, -7.f), vec3(0.f), vec3(0.f, 1.f, 0.f)),
 		fpscamcntrl(make_shared<util::fps_camera_controller>(cam)), rndr2d(dev, default_package),
-		fnt(rndr2d, "C:\\Windows\\Fonts\\consola.ttf", 16.f)
+		fnt(rndr2d, "C:\\Windows\\Fonts\\consola.ttf", 16.f), ppp(default_package, "tt"), mmm(ppp.path_of("ttt")),
+		nrtx(vec2(1024))
 	{
 		mat4 m = translate(mat4(1), vec3(8.f, 7.f, 6.f));
 		vec4 a = m*vec4(0.f, 0.f, 0.f, 1.f);
@@ -103,6 +108,8 @@ public:
 
 		FT_Library lib;
 		FT_Init_FreeType(&lib);
+
+		auto p = package(default_package, "test\\");
 	}
 
 	vec4 clear_color;
@@ -142,8 +149,6 @@ public:
 		tex.bind(0);
 		s.set_uniform("tex", 0);
 		torus->draw();
-		tex.unbind(0);
-		s.unbind();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		glClearColor(0.f, 0.f, 0.f, 1.f);
@@ -155,8 +160,18 @@ public:
 		tex.bind(0);
 		s.set_uniform("tex", 0);
 		torus->draw();
-		tex.unbind(0);
-		s.unbind();
+		glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
+		dev->pop_render_target();
+
+		glClearColor(0.f, 1.f, 0.f, 1.f);
+		dev->push_render_target(&nrtx);
+		s.bind();
+		s.set_uniform("world", torus_world);
+		s.set_uniform("itworld", inverse(transpose(torus_world)));
+		s.set_uniform("view_proj", perspectiveFov(radians(45.f), 1024.f, 1024.f, .01f, 1000.f)*lookAt(vec3(0.f, 4.f, -10.f), vec3(0.f), vec3(0.f, 1.f, 0.f)));
+		tex.bind(0);
+		s.set_uniform("tex", 0);
+		torus->draw();
 		glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 		dev->pop_render_target();
 
@@ -183,20 +198,27 @@ public:
 		//s.set_uniform("tex", 0);
 		s.set_texture("tex", rtx, 0);
 		screen->draw();
-		rtx.unbind(0);
+		//rtx.unbind(0);
 		//glBindTexture(GL_TEXTURE_2D, 0);
-		s.unbind();
+		//s.unbind();
 
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		rndr2d.begin_draw();
 		rndr2d.draw_rect(vec2(0.f, sin(t*3.f)*60.f), vec2(60.f), vec4(1.f, 0.5f, 0.f, .5f));
 		rndr2d.draw_rect(vec2(30.f, sin(t*3.f)*60.f), vec2(60.f), vec4(.5f, 1.f, 0.f, .5f));
-		rndr2d.draw_rect(vec2(-300.f), vec2(100.f), vec4(1.f), &tex);
+		//rndr2d.draw_rect(vec2(-300.f), vec2(100.f), vec4(1.f), &tex);
 		vec2 fps_pos = vec2(-dev->size().x + 20.f, dev->size().y - 40.f);
 		rndr2d.draw_rect(fps_pos+vec2(0.f, 10.f), vec2(300.f, 32.f), vec4(.3f, .3f, .3f, .8f));
 		ostringstream oss;
 		oss << "FPS: " << 1.f / dt << "";
 		rndr2d.draw_string(fps_pos, oss.str(), fnt, vec4(1.f, 0.5f, 0.f, 1.f));
+	//	rndr2d.draw_string(vec2(-500.f, 0.f), "The quick brown fox jumps over the lazy dog", fnt, vec4(1.f, 0.5f, 0.f, 1.f));
+
+		rndr2d.disable_blend();
+		
+		rndr2d.draw_rect(vec2(0.f, 300.f), vec2(128), vec4(1), &nrtx.get_texture(0));
+		rndr2d.draw_rect(vec2(-300.f, -300.f), vec2(128), vec4(1), &nrtx.get_texture(1));
+		rndr2d.draw_rect(vec2(300.f, -300.f), vec2(128), vec4(1), &nrtx.get_texture(2));
 		rndr2d.end_draw();
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}

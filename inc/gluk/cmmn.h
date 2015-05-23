@@ -211,12 +211,13 @@ namespace gluk
 		wstring _base_path;
 	public:
 		package(const string& p) : _base_path(s2ws(p)){}
-		package(const package& p, const string& r) : _base_path(p._base_path+s2ws(PATH_DELI+r)) {}
+		package(const package& p, const string& r) : _base_path(p._base_path+s2ws(r)) {}
 		//gets the executable directory for the base path (system dependent)
 		package(char);
 		shared_ptr<filedata> open(const string& f, bool readwrite = false) const;
 
 		string path_of(const string& p) const { return ws2s(_base_path) + p; }
+
 
 		proprw(wstring, base_path, { return _base_path; })
 		propr(wstring, base_path, { return _base_path; })

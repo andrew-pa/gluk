@@ -37,14 +37,18 @@ namespace gluk {
 			shader shdr;
 			mesh* quad;
 			FT_Library ft_lib;
+			bool blend_enabled;
 		public:
 			vec2 dpi;
 			renderer2d(device* _dev, const package& pak);
 
 			void begin_draw();
 			void end_draw();
+
+			void enable_blend();
+			void disable_blend();
 			
-			void draw_rect(vec2 offset, vec2 size, const vec4& col = vec4(1.f), texture2d* tex = nullptr);
+			void draw_rect(vec2 offset, vec2 size, const vec4& col = vec4(1.f), const texture<2>* tex = nullptr);
 			
 			void draw_string(vec2 offset, const string& str, font& fnt, const vec4& col = vec4(1.f));
 			

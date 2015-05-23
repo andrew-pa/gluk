@@ -169,11 +169,11 @@ namespace gluk
 		~shader();
 
 		virtual void bind();
-		virtual void unbind();
+		//unbind is stupid: virtual void unbind();
 		virtual void update();
 
 		template <typename T>
-		void set_uniform(const string& id, const T& value, bool fail_on_nfind = true)
+		void set_uniform(const string& id, const T& value, bool fail_on_nfind = false)
 		{
 			GLint ix = -1;
 			auto ui = uniform_index_cache.find(id);
@@ -205,7 +205,7 @@ namespace gluk
 		}
 
 		template <int Dim, int AS = 1>
-		void set_texture(const string& id, const texture<Dim, AS>& tex, int slot, bool fail_on_not_found = true)
+		void set_texture(const string& id, const texture<Dim, AS>& tex, int slot, bool fail_on_not_found = false)
 		{
 			tex.bind(slot);
 			set_uniform(id, slot, fail_on_not_found);

@@ -21,7 +21,7 @@ namespace gluk
 		friend class uniform_buffer;
 
 		map<string, tuple<GLint, int>> shader_cashe;
-		GLint load_shader(const string& path, const filedatasp data, GLenum type);
+		GLint load_shader(const string& path, const package& pak, GLenum type);
 		void delete_shader(GLint id);
 		friend class shader;
 	public:

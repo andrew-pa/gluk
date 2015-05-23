@@ -71,17 +71,17 @@ namespace gluk
 		_id = glCreateProgram();
 		if (!vs_path.empty())
 		{
-			_idvp = dev->load_shader(vs_path, pak.open(vs_path), GL_VERTEX_SHADER);
+			_idvp = dev->load_shader(vs_path, pak, GL_VERTEX_SHADER);
 			glAttachShader(_id, _idvp);
 		}
 		if (!gs_path.empty())
 		{
-			_idgp = dev->load_shader(gs_path, pak.open(gs_path), GL_GEOMETRY_SHADER);
+			_idgp = dev->load_shader(gs_path, pak, GL_GEOMETRY_SHADER);
 			glAttachShader(_id, _idgp);
 		}
 		if (!ps_path.empty())
 		{
-			_idfp = dev->load_shader(ps_path, pak.open(ps_path), GL_FRAGMENT_SHADER);
+			_idfp = dev->load_shader(ps_path, pak, GL_FRAGMENT_SHADER);
 			glAttachShader(_id, _idfp);
 		}
 
@@ -143,10 +143,12 @@ namespace gluk
 		glUseProgram(_id);
 	}
 
+	/*unbind is stupid. 
+	the new methodology is that you don't know what the GL state is so just change and forget
 	void shader::unbind()
 	{
 		glUseProgram(0);
-	}
+	}*/
 
 	void shader::update()
 	{

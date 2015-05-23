@@ -4,7 +4,7 @@
 namespace gluk {
 	namespace graphics2d {
 		renderer2d::renderer2d(device* _dev, const package& pak)
-			: dev(_dev), shdr(_dev, pak, "renderer2d.vs.glsl", "renderer2d.ps.glsl") {
+			: dev(_dev), shdr(_dev, pak, "renderer2d.vs.glsl", "renderer2d.ps.glsl"), blend_enabled(true) {
 			quad = new interleaved_mesh<vertex_position_normal_texture, uint8>(
 				generate_screen_quad<vertex_position_normal_texture,uint8>(vec2(0.f), vec2(1.f)), "");
 			FT_Init_FreeType(&ft_lib);
@@ -22,17 +22,34 @@ namespace gluk {
 			//glfw is crazy
 			dpi = vec2(96.f);
 		}
+
+		void renderer2d::enable_blend() {
+			if(!blend_enabled) {
+				blend_enabled = true;
+
+				glEnable(GL_BLEND);
+				glBlendEquation(GL_FUNC_ADD);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			}
+		}
+
+		void renderer2d::disable_blend() {
+			if(blend_enabled)
+				glDisable(GL_BLEND);
+		}
 		
 		void renderer2d::begin_draw() {
 			glDisable(GL_CULL_FACE);	
 			glDisable(GL_DEPTH_TEST);
-			glEnable(GL_BLEND);
-			glBlendEquation(GL_FUNC_ADD);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			if(blend_enabled) {
+				glEnable(GL_BLEND);
+				glBlendEquation(GL_FUNC_ADD);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			}
 			shdr.bind();
 		}
 
-		void renderer2d::draw_rect(vec2 offset, vec2 size, const vec4& col, texture2d* tex) {
+		void renderer2d::draw_rect(vec2 offset, vec2 size, const vec4& col, const texture<2>* tex) {
 			//shdr.set_uniform("trnf", trf);
 			shdr.set_uniform("use_texture", tex != nullptr);
 			shdr.set_uniform("vcolor", col);
@@ -63,10 +80,9 @@ namespace gluk {
 		}
 	
 		void renderer2d::end_draw() {
-			shdr.unbind();
 			glEnable(GL_DEPTH_TEST);
 			glEnable(GL_CULL_FACE);
-			glDisable(GL_BLEND);
+			if(blend_enabled) glDisable(GL_BLEND);
 		}
 
 		font::font(renderer2d& _rndr, const string& name, float size) : rndr(&_rndr) {

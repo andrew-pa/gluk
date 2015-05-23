@@ -180,7 +180,7 @@ namespace gluk
 			_dtx(dpf, vp.size)
 		{
 			glGenFramebuffers(1, &_fbo);
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo);
+			glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
 			glGenTextures(N, _tex);
 
 			for (int i = 0; i < N; ++i)
@@ -188,19 +188,23 @@ namespace gluk
 				glBindTexture(GL_TEXTURE_2D, _tex[i]);
 				glTexImage2D(GL_TEXTURE_2D, 0, pf.get_gl_format_internal(),
 					vp.size.x, vp.size.y, 0, pf.get_gl_format(), pf.get_gl_type(), nullptr);
-				glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, _tex[i], 0);
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, _tex[i], 0);
 
 				_mtex[i] = new texture<2>(_tex[i], vp.size);
 			}
 
 			glBindTexture(GL_TEXTURE_2D, _dtx);
-			glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, _wstencil ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _dtx, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, _wstencil ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _dtx, 0);
 
 			vector<GLenum> db;
 			for (int i = 0; i < N; ++i) db.push_back(GL_COLOR_ATTACHMENT0 + i);
 			glDrawBuffers(db.size(), db.data());
 
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
+
+		void current_buffers(initializer_list<GLenum> buffers) {
+			glDrawBuffers(buffers.size(), buffers.begin());
 		}
 
 		void ombind(gluk::device* dev) override

@@ -55,7 +55,6 @@ namespace gluk
 			glGetTexLevelParameteriv(detail::texture_target_enum_from_dim<Dim, ArraySize>::value, 0, GL_TEXTURE_WIDTH, (GLint*)&_size[0]);
 			if (_size.length() > 1) glGetTexLevelParameteriv(detail::texture_target_enum_from_dim<Dim, ArraySize>::value, 0, GL_TEXTURE_HEIGHT, (GLint*)&_size[1]);
 			if (_size.length() > 2) glGetTexLevelParameteriv(detail::texture_target_enum_from_dim<Dim, ArraySize>::value, 0, GL_TEXTURE_DEPTH, (GLint*)&_size[2]);
-			unbind(16);
 		}
 	public:
 		texture(size_vec_t s)
@@ -67,18 +66,27 @@ namespace gluk
 			mag_filter(GL_LINEAR);
 			ansiotropic_filter(1.f);
 			wrap(GL_REPEAT, GL_REPEAT, GL_REPEAT);
-			unbind(7);
 		}
 
 		texture(GLuint glid, size_vec_t s)
 			: _size(s), _txid(glid) 
 		{
+			bind(7);
+			min_filter(GL_LINEAR);
+			mag_filter(GL_LINEAR);
+			ansiotropic_filter(1.f);
+			wrap(GL_REPEAT, GL_REPEAT, GL_REPEAT);
 		}
 
 		texture(GLuint glid)
 			: _txid(glid)
 		{
 			get_size_from_opengl();
+			bind(7);
+			min_filter(GL_LINEAR);
+			mag_filter(GL_LINEAR);
+			ansiotropic_filter(1.f);
+			wrap(GL_REPEAT, GL_REPEAT, GL_REPEAT);
 		}
 
 		void bind(int slot) const
@@ -86,7 +94,7 @@ namespace gluk
 			glActiveTexture(GL_TEXTURE0 + slot);
 			glBindTexture(detail::texture_target_enum_from_dim<Dim, ArraySize>::value, _txid);
 		}
-		void unbind(int slot) const
+		static void unbind(int slot)
 		{
 			glActiveTexture(GL_TEXTURE0 + slot);
 			glBindTexture(detail::texture_target_enum_from_dim<Dim, ArraySize>::value, 0);
