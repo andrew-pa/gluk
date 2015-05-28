@@ -106,10 +106,27 @@ namespace gluk
 	{
 		triangle_list = GL_TRIANGLES,
 		triangle_strip = GL_TRIANGLE_STRIP,
-		list_list = GL_LINES,
+		line_list = GL_LINES,
 		line_strip = GL_LINE_STRIP,
 		point_list = GL_POINTS,
 	};
+
+	namespace detail {
+	inline uint vertices_per_prim(prim_draw_type dt) {
+		switch (dt)
+		{
+		case gluk::prim_draw_type::triangle_list:
+			return 3;
+		case gluk::prim_draw_type::triangle_strip:
+			return 2;
+		case gluk::prim_draw_type::line_list:
+			return 2;
+		case gluk::prim_draw_type::line_strip:
+			return 1;
+		case gluk::prim_draw_type::point_list:
+			return 1;
+		}
+	}}
 
 	template <typename vertex_type, typename index_type>
 	struct sys_mesh
@@ -184,7 +201,7 @@ namespace gluk
 		{
 			glBindVertexArray(vtx_array);			
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idx_buf);
-			glDrawRangeElementsBaseVertex((GLenum)dt, index_offset, (oindex_count == -1 ? idx_cnt : oindex_count), (oindex_count == -1 ? idx_cnt : oindex_count),
+			glDrawRangeElementsBaseVertex((GLenum)dt, index_offset, (oindex_count == -1 ? idx_cnt : index_offset+oindex_count), (oindex_count == -1 ? idx_cnt : oindex_count),
 				gl_type_for_index_type<index_type>::value, (void*)0, vertex_offset); 
 		}
 		
@@ -201,6 +218,84 @@ namespace gluk
 		propr(GLuint, index_buffer, { return idx_buf; });
 
 	};
+
+
+	template<typename index_type, typename... vertex_types> class multistream_mesh : public mesh {
+		template<typename vertex_type, typename... rest_vertex_types>
+		struct vertex_buffers {
+			static const bool end = false;
+			typedef vertex_type Tvertex;
+			GLuint  id;
+			vertex_buffers<rest_vertex_types...> rest;
+
+			vertex_buffers() {
+				glGenBuffers(1, &id);
+			}
+
+			void for_all(function<void(GLuint)> f) {
+				f(id);
+				rest.for_all(f);
+			}
+
+			~vertex_buffers() {
+				glDeleteBuffers(1, &id);
+			}
+		};
+		template <typename vertex_type>
+		struct vertex_buffers<vertex_type> {
+			static const bool end = true;
+			typedef vertex_type Tvertex;
+			GLuint  id;
+			
+			vertex_buffers() {
+				glGenBuffers(1, &id);
+			}
+
+			void for_all(function<void(GLuint)> f) {
+				f(id);
+			}
+
+			~vertex_buffers() {
+				glDeleteBuffers(1, &id);
+			}
+		};
+		vertex_buffers<vertex_types...> vbufs;
+		GLuint idx_buf;
+		GLuint idx_cnt;
+	public:
+
+		multistream_mesh() : mesh("") {
+			
+		}
+
+		multistream_mesh(const vector<index_type>& idcs, const vector<tuple<void*, size_t, uint8, GLenum>>& datas) : mesh("") {
+			glBindVertexArray(vtx_array);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idx_buf);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, is.size()*sizeof(index_type), is.data(), GL_STATIC_DRAW);
+			idx_cnt = idcs.size();
+			int i = 0;
+			vbufs.for_all([&](GLuint id) {
+				glBindBuffer(GL_ARRAY_BUFFER, id);
+				glBufferData(GL_ARRAY_BUFFER, get<1>(datas[i]), get<0>(datas[i]), GL_STATIC_DRAW);
+				glEnableVertexAttribArray(i);
+				glVertexAttribPointer(i, get<2>(datas[i]), get<3>(datas[i]), GL_FALSE, 0, (void*)0);
+				i++;
+			});
+		}
+
+		void draw(prim_draw_type dt = prim_draw_type::triangle_list,
+			int index_offset = 0, int oindex_count = -1, int vertex_offset = 0) override
+		{
+			glBindVertexArray(vtx_array);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idx_buf);
+			glDrawRangeElementsBaseVertex((GLenum)dt, index_offset, (oindex_count == -1 ? idx_cnt : oindex_count), (oindex_count == -1 ? idx_cnt : oindex_count),
+				gl_type_for_index_type<index_type>::value, (void*)0, vertex_offset);
+		}
+
+		~multistream_mesh() {
+			glDeleteBuffers(1, &idx_buf);
+		}
+	}; 
 
 	class model
 	{

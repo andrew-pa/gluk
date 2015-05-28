@@ -246,16 +246,41 @@ namespace gluk
 		texture_cube(const pixel_format& fmt, size_vec_t size_, vector<void*> data = vector<void*>())
 			: texture(size_)
 		{
-			
 			glBindTexture(GL_TEXTURE_CUBE_MAP, _txid);
 			for (uint i = 0; i < 6; ++i)
 			{
 				glTexImage2D(gluk::detail::gl_cube_map_faces[i], 0, fmt.get_gl_format_internal(), size_.x, size_.y, 0,
 					fmt.get_gl_format(), fmt.get_gl_type(), data.empty() ? nullptr : data[i]);
 			}
+			wrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 			glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 		}
+		texture_cube(const package& pak, initializer_list<string> imgs)
+			: texture(vec2(0))
+		{
+			int chnl = 0;
 
+			glBindTexture(GL_TEXTURE_CUBE_MAP, _txid);
+			auto img = imgs.begin();
+			for (int i = 0; i < 6; ++i) {
+				auto data = pak.open(*img++);
+				auto b = SOIL_load_image_from_memory(data->data<unsigned char>(), data->length(),
+					(int*)&_size[0], (int*)&_size[1], &chnl, 0);
+				GLint fmt = GL_R;
+				switch (chnl)
+				{
+				case 1: fmt = GL_R;		break;
+				case 2: fmt = GL_RG;	break;
+				case 3: fmt = GL_RGB;	break;
+				case 4: fmt = GL_RGBA;	break;
+				}
+
+				glTexImage2D(detail::gl_cube_map_faces[i], 0, fmt, _size.x, _size.y, 0,
+					fmt, GL_UNSIGNED_BYTE, b);
+			}
+			wrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+		}
+#ifdef GLI
 		texture_cube(const gli::textureCube& ctex)
 			: texture(ctex.dimensions())
 		{
@@ -300,6 +325,7 @@ namespace gluk
 				}
 			}
 		}
+#endif
 	};
 
 

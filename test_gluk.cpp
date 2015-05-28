@@ -109,7 +109,12 @@ public:
 		FT_Library lib;
 		FT_Init_FreeType(&lib);
 
-		auto p = package(default_package, "test\\");
+		auto t = texture_cube(default_package, { "citadella2\\posx.jpg", 
+											     "citadella2\\negx.jpg", 
+												 "citadella2\\posy.jpg", 
+												 "citadella2\\negy.jpg", 
+												 "citadella2\\posz.jpg",
+												 "citadella2\\negz.jpg" });
 	}
 
 	vec4 clear_color;
