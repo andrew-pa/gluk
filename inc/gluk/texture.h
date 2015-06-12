@@ -1,6 +1,6 @@
 #pragma once
 #include "cmmn.h"
-#define GLI //for now
+//#define GLI //is for scrubs
 #ifdef GLI
 #include <gli/gli.hpp>
 #endif

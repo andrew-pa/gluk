@@ -25,7 +25,6 @@ if(SHR_RES STREQUAL NOTFOUND)
 else()
   include_directories(${SHARE_INCLUDE})
   message("Using share (INC: ${SHARE_INCLUDE} LIB: ${SHARE_LIBDIR})")
-  link_directories(${SHARE_LIBDIR})
 endif()
 
 
@@ -36,7 +35,8 @@ file(GLOB SOURCES src/*.cpp inc/*/*.h)
 
 add_library(gluk ${SOURCES})
 add_executable(test_gluk test_gluk.cpp)
-target_link_libraries(test_gluk gluk ${OPENGL_LIBRARIES} glfw3dll.lib glew32.lib freetype)
+target_link_libraries(test_gluk gluk ${OPENGL_LIBRARIES}
+${SHARE_LIBDIR}/glfw3dll.lib ${SHARE_LIBDIR}/glew32.lib ${SHARE_LIBDIR}/freetype.lib ${SHARE_LIBDIR}/SOIL.lib)
 file(GLOB SHADERS src/*.glsl)
 message("S" ${SHADERS})
 file(TO_NATIVE_PATH ${PROJECT_BINARY_DIR}/$<CONFIG> NATIVE_SHADER_OUT_DIR)

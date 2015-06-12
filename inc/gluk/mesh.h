@@ -141,13 +141,10 @@ namespace gluk
 	{
 	protected:
 		GLuint vtx_array;
-
-		string _name;
 	public:
-		mesh(const string& n);
-		mesh(const string& n, GLuint vtxa)
-			: _name(n), vtx_array(vtxa) {}
-		proprw(string, name, { return _name; });
+		mesh();
+		mesh(GLuint vtxa)
+			: vtx_array(vtxa) {}
 		virtual void draw(prim_draw_type dt = prim_draw_type::triangle_list, 
 			int index_offset = 0, int oindex_count = -1, int vertex_offset = 0) = 0;
 		~mesh();
@@ -166,9 +163,8 @@ namespace gluk
 		GLuint idx_buf;
 	public:
 		
-		interleaved_mesh(const vector<vertex_type>& vs, const vector<index_type>& is, 
-			const string& name)
-			: mesh(name), vtx_cnt(vs.size()), idx_cnt(is.size())
+		interleaved_mesh(const vector<vertex_type>& vs, const vector<index_type>& is)
+			: mesh(), vtx_cnt(vs.size()), idx_cnt(is.size())
 		{
 			glBindVertexArray(vtx_array);
 			glGenBuffers(1, &vtx_buf);
@@ -188,12 +184,12 @@ namespace gluk
 		}
 
 		interleaved_mesh(uint vc, uint ic, const string& n, GLuint vb, GLuint ib, GLuint var)
-			: mesh(n, var), idx_cnt(ic), vtx_cnt(vc), vtx_buf(vb), idx_buf(ib)
+			: mesh(var), idx_cnt(ic), vtx_cnt(vc), vtx_buf(vb), idx_buf(ib)
 		{
 		}
 
-		interleaved_mesh(const sys_mesh<vertex_type,index_type>& gm, const string& nm)
-			: interleaved_mesh(gm.vertices, gm.indices, nm)
+		interleaved_mesh(const sys_mesh<vertex_type,index_type>& gm)
+			: interleaved_mesh(gm.vertices, gm.indices)
 		{}
 		
 		void draw(prim_draw_type dt = prim_draw_type::triangle_list,
@@ -264,15 +260,15 @@ namespace gluk
 		GLuint idx_cnt;
 	public:
 
-		multistream_mesh() : mesh("") {
+		multistream_mesh() : mesh() {
 			
 		}
 
-		multistream_mesh(const vector<index_type>& idcs, const vector<tuple<void*, size_t, uint8, GLenum>>& datas) : mesh("") {
+		multistream_mesh(const vector<index_type>& is, const vector<tuple<void*, size_t, uint8, GLenum>>& datas) : mesh("") {
 			glBindVertexArray(vtx_array);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idx_buf);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, is.size()*sizeof(index_type), is.data(), GL_STATIC_DRAW);
-			idx_cnt = idcs.size();
+			idx_cnt = is.size();
 			int i = 0;
 			vbufs.for_all([&](GLuint id) {
 				glBindBuffer(GL_ARRAY_BUFFER, id);
@@ -297,7 +293,7 @@ namespace gluk
 		}
 	}; 
 
-	class model
+	/*class model
 	{
 	protected:
 
@@ -516,7 +512,7 @@ namespace gluk
 			glDeleteBuffers(1, &idx_buf);
 			glDeleteVertexArrays(1, &vtx_array);
 		}
-	};
+	};*/
 
 	template <typename vertex_type, typename index_type>
 	sys_mesh<vertex_type,index_type> generate_sphere(float radius, uint slice_count, uint stack_count)

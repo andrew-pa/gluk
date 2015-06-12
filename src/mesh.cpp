@@ -36,8 +36,7 @@ namespace gluk
 	}
 
 
-	mesh::mesh(const string& n)
-		: _name(n)
+	mesh::mesh()
 	{
 		glGenVertexArrays(1, &vtx_array);
 	}

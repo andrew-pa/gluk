@@ -6,7 +6,7 @@ namespace gluk {
 		renderer2d::renderer2d(device* _dev, const package& pak)
 			: dev(_dev), shdr(_dev, pak, "renderer2d.vs.glsl", "renderer2d.ps.glsl"), blend_enabled(true) {
 			quad = new interleaved_mesh<vertex_position_normal_texture, uint8>(
-				generate_screen_quad<vertex_position_normal_texture,uint8>(vec2(0.f), vec2(1.f)), "");
+				generate_screen_quad<vertex_position_normal_texture,uint8>(vec2(0.f), vec2(1.f)));
 			FT_Init_FreeType(&ft_lib);
 			
 			update_dpi();

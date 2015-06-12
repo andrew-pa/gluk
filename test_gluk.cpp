@@ -5,7 +5,6 @@
 #include "texture.h"
 #include "render_target.h"
 #include "util.h"
-#include <gli/gli.hpp>
 
 #include "ft2build.h"
 #include FT_FREETYPE_H
@@ -98,10 +97,10 @@ public:
 
 
 		torus = new interleaved_mesh<vertex_position_normal_texture, uint16>(
-			generate_torus<vertex_position_normal_texture, uint16>(vec2(1., .5), 64), string("torus1"));
+			generate_torus<vertex_position_normal_texture, uint16>(vec2(1., .5), 64));
 
 		screen = new interleaved_mesh<vertex_position_normal_texture, uint16>(
-			generate_plane<vertex_position_normal_texture, uint16>(vec2(3), vec2(16), vec3(0,0,1)), string("video_screen"));
+			generate_plane<vertex_position_normal_texture, uint16>(vec2(3), vec2(16), vec3(0,0,1)));
 
 		input_handlers.push_back(this);
 		input_handlers.push_back(fpscamcntrl.get());
@@ -207,6 +206,7 @@ public:
 		//glBindTexture(GL_TEXTURE_2D, 0);
 		//s.unbind();
 
+
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		rndr2d.begin_draw();
 		rndr2d.draw_rect(vec2(0.f, sin(t*3.f)*60.f), vec2(60.f), vec4(1.f, 0.5f, 0.f, .5f));
@@ -217,7 +217,7 @@ public:
 		ostringstream oss;
 		oss << "FPS: " << 1.f / dt << "";
 		rndr2d.draw_string(fps_pos, oss.str(), fnt, vec4(1.f, 0.5f, 0.f, 1.f));
-	//	rndr2d.draw_string(vec2(-500.f, 0.f), "The quick brown fox jumps over the lazy dog", fnt, vec4(1.f, 0.5f, 0.f, 1.f));
+		rndr2d.draw_string(vec2(-500.f, 0.f), "The quick brown fox jumps over the lazy dog", fnt, vec4(1.f, 0.5f, 0.f, 1.f));
 
 		rndr2d.disable_blend();
 		

@@ -12,7 +12,7 @@ namespace gluk
 		full_screen_quad_shader::full_screen_quad_shader(device* dev, const filedatasp ps, const filedatasp vs)
 			: shader(dev, vs ? vs : make_shared<constmem_filedata>(fsq_vertex_shader_src, sizeof(fsq_vertex_shader_src)), ps)
 		{
-			fsq = new interleaved_mesh<vertex_position, uint16>(generate_screen_quad<vertex_position, uint16>(vec2(0.f), vec2(2.f)), "");
+			fsq = new interleaved_mesh<vertex_position, uint16>(generate_screen_quad<vertex_position, uint16>(vec2(0.f), vec2(2.f)));
 		}
 		
 		full_screen_quad_shader::~full_screen_quad_shader()
