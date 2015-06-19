@@ -196,6 +196,32 @@ namespace gluk
 			}
 			glSetUniformResolve<T>::set(ix, value);
 		}
+		template <typename T>
+		void set_uniform_array(const string& id, int idx, const T& value, bool fail_on_nfind = false)
+		{
+			GLint ix = -1;
+			auto ui = uniform_index_cache.find(id);
+			if (ui != uniform_index_cache.end())
+				ix = ui->second;
+			else
+			{
+				ix = glGetUniformLocation(_id, id.c_str());
+				if (ix < 0)
+				{
+					ostringstream oss;
+					oss << "Can't find uniform: " << id;
+					if (!fail_on_nfind)
+					{
+						return;
+					}
+					throw new exception(oss.str().c_str());
+				}
+				uniform_index_cache[id] = ix;
+			}
+			glSetUniformResolve<T>::set(ix+idx, value);
+		}
+
+
 
 		template <typename T>
 		//WARNING: This function returns a new UBO each time!

@@ -126,6 +126,37 @@ namespace gluk
 		}
 	};
 
+	class depth_render_texture2d : public texture2d, public render_target {
+	protected:
+		GLuint _fbo;
+		viewport _vp;
+	public:
+		depth_render_texture2d(const viewport& vp, const pixel_format& df = pixel_format(pixel_components::depth, pixel_type::floatp, 32));
+
+		void ombind(device* dev) override
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
+			glViewport((GLint)_vp.offset.x, (GLint)_vp.offset.y,
+				(GLsizei)(_vp.size.x < 0 ? dev->size().x : _vp.size.x),
+				(GLsizei)(_vp.size.y < 0 ? dev->size().y : _vp.size.y));
+			glDepthRange(_vp.min_depth < 0 ? 0.f : _vp.min_depth,
+				_vp.max_depth < 0 ? 1.f : _vp.max_depth);
+		}
+
+		void bind_for_read() override
+		{
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, _fbo);
+		}
+
+		inline viewport& mviewport() override { return _vp; }
+
+		~depth_render_texture2d()
+		{
+			glDeleteFramebuffers(1, &_fbo);
+		}
+	};
+
 	class render_texture_cube : public texture_cube
 	{
 		viewport _vp;

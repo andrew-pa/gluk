@@ -38,9 +38,9 @@ namespace gluk
 		GLenum type;
 		vertex_attrib(GLuint i, GLuint c, GLenum t, GLuint o)
 			: idx(i), count(c), type(t), offset(o) {}
-		inline void apply(GLuint stride)
+		inline void apply(GLuint stride, GLint base_idx = 0) const
 		{
-			glVertexAttribPointer(idx, count, type, GL_FALSE, stride, (void*)offset);
+			glVertexAttribPointer(idx+base_idx, count, type, GL_FALSE, stride, (void*)offset);
 		}
 	};
 
@@ -157,6 +157,7 @@ namespace gluk
 	//	index_type:  type for index values. uint16 or uint32 usually
 	template<typename vertex_type, typename index_type> class interleaved_mesh : public mesh
 	{
+	protected:
 		uint idx_cnt;
 		uint vtx_cnt;
 		GLuint vtx_buf;
@@ -179,7 +180,7 @@ namespace gluk
 			for (const auto& v : vabs)
 			{
 				glEnableVertexAttribArray(v.idx);
-				glVertexAttribPointer(v.idx, v.count, v.type, GL_FALSE, sizeof(vertex_type), (void*)v.offset);
+				v.apply(sizeof(vertex_type));
 			}
 		}
 
@@ -215,6 +216,46 @@ namespace gluk
 
 	};
 
+	template<typename vertex_type, typename index_type, typename instance_type> class instanced_interleaved_mesh : public interleaved_mesh<vertex_type,index_type> {
+		GLuint instance_buf;
+	public:
+		instanced_interleaved_mesh(const vector<vertex_type>& vs, const vector<index_type>& is)
+			: interleaved_mesh(vs, is)
+		{
+			glGenBuffers(1, &instance_buf);
+			glBindBuffer(GL_ARRAY_BUFFER, instance_buf);
+			auto idx = vertex_type::get_vertex_attribs()[vertex_type::get_vertex_attribs().size() - 1].idx + 1;
+			auto vabs = instance_type::get_vertex_attribs();
+			for (const auto& v : vabs)
+			{
+				glEnableVertexAttribArray(idx+v.idx);
+				v.apply(sizeof(instance_type), idx);
+				glVertexAttribDivisor(idx + v.idx, 1);
+			}
+		}
+		instanced_interleaved_mesh(const sys_mesh<vertex_type, index_type>& gm) 
+			: instanced_interleaved_mesh(gm.vertices, gm.indices)
+		{
+		}
+
+		void update_instance_buffer(const vector<instance_type>& nt) {
+			glBindBuffer(GL_ARRAY_BUFFER, instance_buf);
+			glBufferData(GL_ARRAY_BUFFER, nt.size()*sizeof(instance_type), nt.data(), GL_DYNAMIC_DRAW);
+		}
+
+		void draw(prim_draw_type dt = prim_draw_type::triangle_list,
+			int index_offset = 1, int oindex_count = -1, int vertex_offset = 0) override
+		{
+			glBindVertexArray(vtx_array);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idx_buf);
+			glDrawElementsInstancedBaseVertex((GLenum)dt, oindex_count != -1 ? oindex_count : idx_cnt, gl_type_for_index_type<index_type>::value, (void*)0,
+				index_offset, vertex_offset);
+		}
+
+		~instanced_interleaved_mesh() {
+			glDeleteBuffers(1, &instance_buf);
+		}
+	};
 
 	template<typename index_type, typename... vertex_types> class multistream_mesh : public mesh {
 		template<typename vertex_type, typename... rest_vertex_types>
@@ -264,7 +305,7 @@ namespace gluk
 			
 		}
 
-		multistream_mesh(const vector<index_type>& is, const vector<tuple<void*, size_t, uint8, GLenum>>& datas) : mesh("") {
+		multistream_mesh(const vector<index_type>& is, const vector<tuple<void*, size_t, uint8, GLenum>>& datas) : mesh() {
 			glBindVertexArray(vtx_array);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idx_buf);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, is.size()*sizeof(index_type), is.data(), GL_STATIC_DRAW);

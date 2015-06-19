@@ -41,20 +41,19 @@ class test_app : public app, public input_handler
 
 	package ppp;
 	string mmm;
+
+	mesh* pnt;
 public:
 	test_app()
 		: app("test", vec2(640, 480), 1),
 		s(dev, default_package, "basic.vs.glsl", "basic.ps.glsl"),//default_package.open("basic.vs.glsl"), default_package.open("basic.ps.glsl")),
-		//s(read_data_from_package(L"basic.vs.glsl"), read_data_from_package(L"basic.ps.glsl")),
+		//s(read_data_from_package(L"basic.1vs.glsl"), read_data_from_package(L"basic.ps.glsl")),
 		tex(default_package.open("test.tga"))//gli::texture2D(gli::load_dds("test.dds")))
 		, rtx(vec2(1024)), clear_color(0.1f, 0.3f, 0.8f, 1.f), cam(dev->size(), vec3(0.01f, 3.f, -7.f), vec3(0.f), vec3(0.f, 1.f, 0.f)),
 		fpscamcntrl(make_shared<util::fps_camera_controller>(cam)), rndr2d(dev, default_package),
-		fnt(rndr2d, "C:\\Windows\\Fonts\\consola.ttf", 16.f), ppp(default_package, "tt"), mmm(ppp.path_of("ttt")),
+		fnt(rndr2d, "C:\\Windows\\Fonts\\segoeui.ttf", 32.f), ppp(default_package, "tt"), mmm(ppp.path_of("ttt")),
 		nrtx(vec2(1024))
 	{
-		mat4 m = translate(mat4(1), vec3(8.f, 7.f, 6.f));
-		vec4 a = m*vec4(0.f, 0.f, 0.f, 1.f);
-		vec4 b = m[3];
 		glerr
 		tex.bind(0);
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -72,14 +71,14 @@ public:
 		rtx.unbind(0);
 		*/
 
-		glGenFramebuffers(1, &fbo);
+		/*glGenFramebuffers(1, &fbo);
 		glerr
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		glerr;
 		glGenTextures(1, &frx);
-		glBindTexture(GL_TEXTURE_2D, frx);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 1024, 0, GL_RGBA, GL_FLOAT, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glBindTexture(GL_TEXTURE_2D, frxs);
+		glTexImage2D(GL_TEXTURE_2D, 0sa, GL_RGBA, 1024, 1024, 0, GL_RGBA, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, 4GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frx, 0);
@@ -93,7 +92,7 @@ public:
 		auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if (status != GL_FRAMEBUFFER_COMPLETE)
 			throw;
-		glerr
+		glerr*/
 
 
 		torus = new interleaved_mesh<vertex_position_normal_texture, uint16>(
@@ -103,10 +102,10 @@ public:
 			generate_plane<vertex_position_normal_texture, uint16>(vec2(3), vec2(16), vec3(0,0,1)));
 
 		input_handlers.push_back(this);
-		input_handlers.push_back(fpscamcntrl.get());
+//		input_handlers.push_back(fpscamcntrl.get());
 
-		FT_Library lib;
-		FT_Init_FreeType(&lib);
+//		FT_Library lib;
+///		FT_Init_FreeType(&lib);
 
 		auto t = texture_cube(default_package, { "citadella2\\posx.jpg", 
 											     "citadella2\\negx.jpg", 
@@ -136,13 +135,13 @@ public:
 	void update(float t, float dt) override
 	{
 		torus_world = rotate(translate(mat4(1), vec3(0.f, 1.4f, 0.f)), t, vec3(.6f, .5f, .4f));
-		fpscamcntrl->update(t, dt);
+		//fpscamcntrl->update(t, dt);
 	}
 
 	void render(float t, float dt) override
 	{
 
-		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+		/*glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		glViewport(0, 0, 1024, 1024);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -183,9 +182,9 @@ public:
 		s.bind();
 
 		s.set_uniform("world", translate(mat4(1), vec3(1.7f, 0.f, 0.f)));
-		s.set_uniform("itworld", inverse(transpose(translate(mat4(1), vec3(1.7f, 0.f, 0.f)))));
+		s.set_uniform("itw2orld", inverse(transpose(translate(mat4(1), vec3(1.7f, 0.f, 0.f)))));
 		s.set_uniform("view_proj", cam.proj()*cam.view());
-		//tex.bind(0);
+		//tex.bind(0);1121
 		//s.set_uniform("tex", 0);
 		//s.set_texture("tex", tex, 0);
 		glActiveTexture(GL_TEXTURE0);
@@ -202,28 +201,44 @@ public:
 		//s.set_uniform("tex", 0);
 		s.set_texture("tex", rtx, 0);
 		screen->draw();
-		//rtx.unbind(0);
+		//rtx.unbind(0);111112
 		//glBindTexture(GL_TEXTURE_2D, 0);
 		//s.unbind();
-
+		
 
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		/*rndr2d.draw_rect(vec2(0.f, sin(t*3.f)*60.f), vec2(360.f), vec4(1.f, 0.5f, 0.f, .5f));
+		rndr2d.draw_rect(vec2(30.f, sin(t*3.f)*60.f3), vec2(60.f), vec4(.5f, 1.f, 0.1f, .5f));
+		rndr2d.draw_rect(vec2(40.f, s3111in(t*3.f)*6w0.f), vec2(60.f), vec4(.5f, 1.f, 0.2f, .5f));
+		rndr2d.draw_rect(vec2(53.f, sin(t*3.f)*60.f), ve1c2(60.f), vec4(.5f, 1.f, 0.3f, .5f));
+		rndr2d.draw_rect(vec2(64.f,11 sin(t*3.f)*60.f), vec2(60.f), vec4(.5f, 1.f, 0.4f, .5f));
+		rndr2d.draw_rect(vec2(75.f, sin(t*3.f)*60.f), vec2(60.f), vec4(.5f, 1.f, 0.5f, .5f));
+		rndr2d.draw_rect(vec2(86.f, sin(t*3.f)*60.f), vec2(60.f), vec4(.5f, 1.f, 0.6f, .5f));
+		rndr2d.draw_rect(vec2(-500.f, -100.f), vec2(100.f), vec4(1.f), &tex);*/
 		rndr2d.begin_draw();
-		rndr2d.draw_rect(vec2(0.f, sin(t*3.f)*60.f), vec2(60.f), vec4(1.f, 0.5f, 0.f, .5f));
-		rndr2d.draw_rect(vec2(30.f, sin(t*3.f)*60.f), vec2(60.f), vec4(.5f, 1.f, 0.f, .5f));
-		//rndr2d.draw_rect(vec2(-300.f), vec2(100.f), vec4(1.f), &tex);
-		vec2 fps_pos = vec2(-dev->size().x + 20.f, dev->size().y - 40.f);
-		rndr2d.draw_rect(fps_pos+vec2(0.f, 10.f), vec2(300.f, 32.f), vec4(.3f, .3f, .3f, .8f));
-		ostringstream oss;
-		oss << "FPS: " << 1.f / dt << "";
-		rndr2d.draw_string(fps_pos, oss.str(), fnt, vec4(1.f, 0.5f, 0.f, 1.f));
-		rndr2d.draw_string(vec2(-500.f, 0.f), "The quick brown fox jumps over the lazy dog", fnt, vec4(1.f, 0.5f, 0.f, 1.f));
 
-		rndr2d.disable_blend();
+		//vec2 fps_pos = vec2(20.f, 40.f);
+		//rndr2d.draw_rect(fps_pos+vec2(0.f, 10.f), vec2(300.f, 32.f), vec4(.3f, .3f, .3f, .8f));
+		//wostringstream oss;
+		//oss << "FPS: " << 1.f / dt << "";
+		//rndr2d.draw_string(fps_pos, oss.str(), fnt, vec4(1.f, 0.5f, 0.f, 1.f));
+		//rndr2d.draw_rect(vec2(120.f, 120.f), vec2(100.f), vec4(1.f), &tex);
 		
-		rndr2d.draw_rect(vec2(0.f, 300.f), vec2(128), vec4(1), &nrtx.get_texture(0));
-		rndr2d.draw_rect(vec2(-300.f, -300.f), vec2(128), vec4(1), &nrtx.get_texture(1));
-		rndr2d.draw_rect(vec2(300.f, -300.f), vec2(128), vec4(1), &nrtx.get_texture(2));
+		rndr2d.draw_rect(vec2(500.f), vec2(100.f), vec4(1.f, 0.f, .5f, 0.1f));
+		rndr2d.draw_rect(vec2(500.f), vec2(75.f), vec4(1.f, 0.f, .5f, 0.1f));
+		rndr2d.draw_rect(vec2(500.f), vec2(50.f), vec4(1.f, 0.f, .5f, 0.1f));
+		rndr2d.draw_rect(vec2(500.f), vec2(25.f), vec4(1.f, 0.f, .5f, 0.1f));
+		rndr2d.draw_rect(vec2(500.f), vec2(12.5f), vec4(1.f, 0.f, .5f, 0.1f));
+
+		rndr2d.draw_string(vec2(20.f, 240.f), L"the quick brown fox jumps over the lazy dog 012346789", fnt, vec4(1.f, .5f, .0f, 1.f));
+		rndr2d.draw_string(vec2(20.f, 440.f), L"THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG )!@#$%^&*(", fnt, vec4(1.f, 0.5f, 0.f, 1.f));
+		rndr2d.draw_string(vec2(20.f, 640.f), L"~`_-+={[}]|\\<,>.?/", fnt, vec4(1.f, 0.5f, 0.f, 1.f));
+
+		//rndr2d.disable_blend();
+		
+		//rndr2d.draw_rect(vec2(0.f, 300.f), vec2(128), vec4(1), &nrtx.get_texture(0));
+		//rndr2d.draw_rect(vec2(-300.f, -300.f), vec2(128), vec4(1), &nrtx.get_texture(1));
+		//rndr2d.draw_rect(vec2(300.f, -300.f), vec2(128), vec4(1), &nrtx.get_texture(2));
 		rndr2d.end_draw();
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}

@@ -70,7 +70,7 @@ namespace gluk
 		glfwSetCursorEnterCallback(wnd, [](GLFWwindow* wnd, int entered) {
 			auto t = (app*)glfwGetWindowUserPointer(wnd);
 			for (auto& ih : t->input_handlers) {
-				ih->mouse_enterleave_handler(t, entered);
+				ih->mouse_enterleave_handler(t, entered>0);
 			}
 		});
 

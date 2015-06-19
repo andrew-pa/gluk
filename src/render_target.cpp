@@ -55,6 +55,17 @@ namespace gluk
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
+	depth_render_texture2d::depth_render_texture2d(const viewport& vp, const pixel_format& df)
+		: _vp(vp), render_target(df.comp == pixel_components::depth_stencil), texture2d(df, (uvec2)vp.size)
+	{
+		glGenFramebuffers(1, &_fbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, _wstencil ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _txid, 0);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
 	void render_texture_cube::render_face::ombind(device* dev)
 	{
 		const auto& _vp = rtc->_vp;	

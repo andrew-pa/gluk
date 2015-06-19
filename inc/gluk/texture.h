@@ -239,6 +239,99 @@ namespace gluk
 			GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
 		};
 	}
+
+	/*class texture_atlas : public texture2d {
+		pixel_format _fmt;
+		vec2 inv_size;
+		bool intersects(const vec4& a, const vec4& b) {
+			float aleft = a.x, aright = a.x + a.z, atop = a.y, abottom = a.y + a.w;
+			float bleft = b.x, bright = b.x + b.z, btop = b.y, bbottom = b.y + b.w;
+			return 
+				!(aleft > bright ||
+				aright < bleft ||
+				atop > bbottom ||
+				abottom < btop);
+		}
+		bool any_intersection(const vec4& a) {
+			for (const auto& b : portions)
+				if (intersects(a, b)) return true;
+			return false;
+		}
+		//todo: unnormalize the texture coords in this class so that it can resize the texture and not have to change all the coords
+	public:
+		texture_atlas(const pixel_format& fmt, size_vec_t::value_type init_side_p2_length)
+			: texture2d(fmt, size_vec_t(pow(2, init_side_p2_length))), _fmt(fmt)
+		{
+			inv_size = 1.f / vec2(_size);
+		}
+		vector<vec4> portions;
+		uint add(size_vec_t size_, void* data) {
+			uint id = portions.size();
+			this->bind(0);
+			vec2 s = vec2(size_);
+			if(id == 0) {
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, size_.x, size_.y, _fmt.get_gl_format(), _fmt.get_gl_type(), data);
+				portions.push_back(vec4(vec2(0.f), s));
+			} else {
+				uint finding_attemps = 0;
+find_home_for_portion:
+				int try_id = id-1;
+				bool suc = false;
+				do {
+					vec4 last_p = portions[try_id];
+					//try adding this portion to the left of the previous & the new portion won't extend past the total height
+					vec4 np = vec4(last_p.x + last_p.z + 1, last_p.y, s.x, s.y);
+					if(np.x <= _size.x && np.x >= 0.f && s.y+last_p.y <= _size.y && !any_intersection(np)) {
+						glTexSubImage2D(GL_TEXTURE_2D, 0, np.x, np.y, np.z, np.w, _fmt.get_gl_format(),
+							_fmt.get_gl_type(), data);
+						portions.push_back(np);
+						suc = true;
+						break;
+					}
+					//try adding this portion to the right of the previous & the new portion won't extend past the total height
+					np = vec4(last_p.x - (s.x + 1), last_p.y, s.x, s.y);
+					if (np.x <= _size.x && np.x >= 0 && s.y + last_p.y <= _size.y && !any_intersection(np)) {
+						glTexSubImage2D(GL_TEXTURE_2D, 0, np.x, np.y, np.z, np.w, _fmt.get_gl_format(),
+							_fmt.get_gl_type(), data);
+						portions.push_back(np);
+						suc = true;
+						break;
+					}
+					//try adding this portion at the bottom of the previous & make sure it won't extend past the total width
+					np = vec4(last_p.x, last_p.y + last_p.w + 1, s.x, s.y);
+					if (np.y <= _size.y && s.x+last_p.x <= _size.x && !any_intersection(np)) {
+						glTexSubImage2D(GL_TEXTURE_2D, 0, np.x, np.y, np.z, np.w, _fmt.get_gl_format(),
+							_fmt.get_gl_type(), data);
+						portions.push_back(np);
+						suc = true;
+						break;
+					}
+					try_id--;
+				} while (try_id > 0);
+				//we couldn't find a home for this portion
+				if(!suc) {
+					//resize texture
+					GLuint ntxid = 0;
+					glGenTextures(1, &ntxid);
+					glBindTexture(GL_TEXTURE_2D, ntxid);
+					glTexImage2D(GL_TEXTURE_2D, 0, _fmt.get_gl_format_internal(), _size.x*2, _size.y*2, 0,
+						_fmt.get_gl_format(), _fmt.get_gl_type(), nullptr); //move up to the next power of 2
+					glCopyImageSubData(_txid, GL_TEXTURE_2D, 0, 0, 0, 0, ntxid, GL_TEXTURE_2D, 0, 0, 0, 0, _size.x, _size.y, 1);
+					glDeleteTextures(1, &_txid);
+					_txid = ntxid;
+					_size *= 2;
+					inv_size *= 0.5f;
+					//try again
+					finding_attemps++;
+					if (finding_attemps > 64) throw exception("bad news");
+					goto find_home_for_portion;
+				}
+			}
+
+			return id;
+		}
+	};*/
+
 	class texture_cube : public texture<2, 6> /*this dim template is weird here*/
 	{
 		
