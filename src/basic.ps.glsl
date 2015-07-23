@@ -11,8 +11,7 @@ uniform sampler2D tex;
 void main()
 {
   vec4 tc = texture2D(tex, texc);
-  vec4 itc = vec4(1.) - tc;
-  color = mix(itc, tc, dot(norm_w, vec3(0., 1., 0.)));
+  color = tc*max(.2, dot(norm_w, vec3(0., 1., 0.)));
 
   /*mix(vec4(.5, 0., 1., 1.),
               vec4(1., .5, 0., 1.),

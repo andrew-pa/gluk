@@ -257,6 +257,15 @@ namespace gluk
 		}
 	};
 
+	struct multistream_mesh_stream_desc {
+		void* data;
+		size_t size;
+		uint8 element_size;
+		GLenum type;
+		multistream_mesh_stream_desc(void* d, size_t s, uint8 elsize, GLenum t) 
+			: data(d), size(s), element_size(elsize), type(t) {}
+	};
+
 	template<typename index_type, typename... vertex_types> class multistream_mesh : public mesh {
 		template<typename vertex_type, typename... rest_vertex_types>
 		struct vertex_buffers {
@@ -305,17 +314,19 @@ namespace gluk
 			
 		}
 
-		multistream_mesh(const vector<index_type>& is, const vector<tuple<void*, size_t, uint8, GLenum>>& datas) : mesh() {
+
+		multistream_mesh(const vector<index_type>& is, const vector<multistream_mesh_stream_desc>& datas) : mesh() {
 			glBindVertexArray(vtx_array);
+			glGenBuffers(1, &idx_buf);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idx_buf);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, is.size()*sizeof(index_type), is.data(), GL_STATIC_DRAW);
 			idx_cnt = is.size();
 			int i = 0;
 			vbufs.for_all([&](GLuint id) {
 				glBindBuffer(GL_ARRAY_BUFFER, id);
-				glBufferData(GL_ARRAY_BUFFER, get<1>(datas[i]), get<0>(datas[i]), GL_STATIC_DRAW);
+				glBufferData(GL_ARRAY_BUFFER, datas[i].size, datas[i].data, GL_STATIC_DRAW);
 				glEnableVertexAttribArray(i);
-				glVertexAttribPointer(i, get<2>(datas[i]), get<3>(datas[i]), GL_FALSE, 0, (void*)0);
+				glVertexAttribPointer(i, datas[i].element_size, datas[i].type, GL_FALSE, 0, (void*)0);
 				i++;
 			});
 		}
@@ -771,9 +782,8 @@ namespace gluk
 		GLuint vtx_buf;
 		GLuint idx_buf;
 	public:
-		mutable_interleaved_mesh(const vector<vertex_type>& vs, const vector<index_type>& is,
-			const string& name)
-			: mesh(name), vtx_cnt(vs.size()), idx_cnt(is.size())
+		mutable_interleaved_mesh(const vector<vertex_type>& vs, const vector<index_type>& is)
+			: mesh(), vtx_cnt(vs.size()), idx_cnt(is.size())
 		{
 			glBindVertexArray(vtx_array);
 			glGenBuffers(1, &vtx_buf);
@@ -792,9 +802,15 @@ namespace gluk
 			}
 		}
 
-		mutable_interleaved_mesh(device* _dev, const sys_mesh<vertex_type, index_type>& gm, const string& nm)
-			: mutable_interleaved_mesh(_dev, gm.vertices, gm.indices, nm)
+		mutable_interleaved_mesh(device* _dev, const sys_mesh<vertex_type, index_type>& gm)
+			: mutable_interleaved_mesh(_dev, gm.vertices, gm.indices)
 		{}
+
+		void update(device* _dev, const vector<vertex_type>& vs)
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, vtx_buf);
+			glBufferData(GL_ARRAY_BUFFER, vs.size()*sizeof(vertex_type), vs.data(), GL_DYNAMIC_DRAW);
+		}
 
 		void update(device* _dev, const vector<vertex_type>& vs, const vector<index_type>& is)
 		{
@@ -811,13 +827,14 @@ namespace gluk
 			update(_dev, gm.vertices, gm.indices);
 		}
 		
-		void draw(device* _dev, prim_draw_type dt = prim_draw_type::triangle_list,
+		void draw(prim_draw_type dt = prim_draw_type::triangle_list,
 			int index_offset = 0, int oindex_count = -1, int vertex_offset = 0) override
 		{
 			glBindVertexArray(vtx_array);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idx_buf);
-			glDrawElements((GLenum)dt, (oindex_count == -1 ? idx_cnt : oindex_count),
-				GL_UNSIGNED_SHORT, (void*)0); //TODO: Change GL_UNSIGNED_SHORT to whatever the appropriate GL_* const is for the index_type
+			glDrawRangeElementsBaseVertex((GLenum)dt, index_offset, (oindex_count == -1 ? idx_cnt : index_offset + oindex_count), (oindex_count == -1 ? idx_cnt : oindex_count),
+				gl_type_for_index_type<index_type>::value, (void*)0, vertex_offset);
+
 		}
 
 

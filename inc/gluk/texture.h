@@ -56,12 +56,13 @@ namespace gluk
 			if (_size.length() > 1) glGetTexLevelParameteriv(detail::texture_target_enum_from_dim<Dim, ArraySize>::value, 0, GL_TEXTURE_HEIGHT, (GLint*)&_size[1]);
 			if (_size.length() > 2) glGetTexLevelParameteriv(detail::texture_target_enum_from_dim<Dim, ArraySize>::value, 0, GL_TEXTURE_DEPTH, (GLint*)&_size[2]);
 		}
+		int current_bound_slot;
 	public:
 		texture(size_vec_t s)
-			: _size(s)
+			: _size(s), current_bound_slot(-1)
 		{
 			glGenTextures(1, &_txid);
-			bind(7);
+			bind();
 			min_filter(GL_LINEAR);
 			mag_filter(GL_LINEAR);
 			ansiotropic_filter(1.f);
@@ -69,9 +70,9 @@ namespace gluk
 		}
 
 		texture(GLuint glid, size_vec_t s)
-			: _size(s), _txid(glid) 
+			: _size(s), _txid(glid), current_bound_slot(-1)
 		{
-			bind(7);
+			bind();
 			min_filter(GL_LINEAR);
 			mag_filter(GL_LINEAR);
 			ansiotropic_filter(1.f);
@@ -79,25 +80,31 @@ namespace gluk
 		}
 
 		texture(GLuint glid)
-			: _txid(glid)
+			: _txid(glid), current_bound_slot(-1)
 		{
 			get_size_from_opengl();
-			bind(7);
+			bind();
 			min_filter(GL_LINEAR);
 			mag_filter(GL_LINEAR);
 			ansiotropic_filter(1.f);
 			wrap(GL_REPEAT, GL_REPEAT, GL_REPEAT);
 		}
 
-		void bind(int slot) const
-		{
+		void bind(int slot) {
+			if (current_bound_slot == slot) return;
+			current_bound_slot = slot;
 			glActiveTexture(GL_TEXTURE0 + slot);
 			glBindTexture(detail::texture_target_enum_from_dim<Dim, ArraySize>::value, _txid);
 		}
-		static void unbind(int slot)
-		{
-			glActiveTexture(GL_TEXTURE0 + slot);
+		void bind() {
+			if (current_bound_slot != -1) return; //we're bound somewhere
+			glBindTexture(detail::texture_target_enum_from_dim<Dim, ArraySize>::value, _txid);
+			current_bound_slot = -2;
+		}
+		void unbind() {
+			if(current_bound_slot != -2) glActiveTexture(GL_TEXTURE0 + current_bound_slot);
 			glBindTexture(detail::texture_target_enum_from_dim<Dim, ArraySize>::value, 0);
+			current_bound_slot = -1;
 		}
 
 		//these functions assume the function is already bound
@@ -225,6 +232,25 @@ namespace gluk
 
 		texture2d(GLuint id)
 			: texture(id) {}
+	};
+
+	class texture3d : public texture<3> {
+	public:
+		texture3d(const pixel_format& fmt, size_vec_t size_, void* data = nullptr)
+			: texture(size_)
+		{
+			glBindTexture(GL_TEXTURE_3D, _txid);
+			glTexImage3D(GL_TEXTURE_3D, 0, fmt.get_gl_format_internal(), 
+				_size.x, _size.y, _size.z, 0, fmt.get_gl_format(), fmt.get_gl_type(), data);
+			glBindTexture(GL_TEXTURE_3D, 0);
+		}
+
+		void update(size_vec_t offset, size_vec_t region, void* data, const pixel_format& fmt) {
+			bind();
+			glTexSubImage3D(GL_TEXTURE_3D, 0, offset.x, offset.y, offset.z, region.x, region.y, region.z, fmt.get_gl_format(),
+				fmt.get_gl_type(), data);
+			unbind();
+		}
 	};
 
 	namespace detail

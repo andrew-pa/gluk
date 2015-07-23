@@ -8,6 +8,8 @@ namespace gluk
 {
 	namespace util 
 	{
+		class camera;
+		class perspective_camera;
 		namespace math {
 			struct aabb {
 				vec3 min, max;
@@ -54,17 +56,17 @@ namespace gluk
 
 				inline vec3 p_vertex(vec3 n) const {
 					vec3 r = min;
-					if (n.x > 0) r.x += max.x;
-					if (n.y > 0) r.y += max.y;
-					if (n.z > 0) r.z += max.z;
+					if (n.x >= 0) r.x = max.x;
+					if (n.y >= 0) r.y = max.y;
+					if (n.z >= 0) r.z = max.z;
 					return r;
 				}
 
 				inline vec3 n_vertex(vec3 n) const {
-					vec3 r = min;
-					if (n.x < 0) r.x += max.x;
-					if (n.y < 0) r.y += max.y;
-					if (n.z < 0) r.z += max.z;
+					vec3 r = max;
+					if (n.x >= 0) r.x = min.x;
+					if (n.y >= 0) r.y = min.y;
+					if (n.z >= 0) r.z = min.z;
 					return r;
 				}
 
@@ -106,8 +108,8 @@ namespace gluk
 			struct frustrum {
 				vec3 normal[6];
 				float dist[6];
-				frustrum(const mat4& view, const mat4& proj) {
-					mat4 vp = proj*view;
+				//frustrum(const mat4& view, const mat4& proj) {
+					/*mat4 vp = proj*view;
 					vec4 plns[6];
 					plns[0] =  vp[0]  + vp[3];
 					plns[1] = -vp[0]  + vp[3];
@@ -116,11 +118,19 @@ namespace gluk
 					plns[4] =  vp[2]  + vp[3];
 					plns[5] = -vp[2]  + vp[3];
 					for (uint i = 0; i < 6; ++i) {
-						normal[i] = normalize(vec3(plns[i]));
-						dist[i] = plns[i].w;
-					}
-				}
+						normal[i] = plns[i].xyz;
+						float l = normal[i].length();
+						normal[i] /= l;
+						dist[i] = plns[i].w / l;
+						//normal[i] = normalize(vec3(plns[i]));
+						//dist[i] = plns[i].w;
+					}*/
+					
+				//}
+				frustrum(){}
+				frustrum(float fov, float aspect, float nz, float fz, vec3 pos, mat3 basis);
 
+				frustrum(const vec4& ortho_lrtb, vec2 ortho_nf, vec3 pos, mat3 basis);
 				//'contains' functions are containment || intersection 
 				
 				inline bool contains(const sphere& s) const {
@@ -133,13 +143,25 @@ namespace gluk
 				}
 
 				inline bool contains(const aabb& b) const {
+					bool res = true;
 					for (uint i = 0; i < 6; ++i) {
-						if ((dist[i] + dot(normal[i], b.p_vertex(normal[i]))) < 0) return false;
-						if ((dist[i] + dot(normal[i], b.n_vertex(normal[i]))) < 0) return true;
+						if ((dist[i] + dot(normal[i], b.p_vertex(normal[i]))) < 0) 
+							return false; //p vertex outside the plane so the whole box is
+						else if ((dist[i] + dot(normal[i], b.n_vertex(normal[i]))) < 0) 
+							res = true;  //n vertex outside the plane, but p vertex is inside so box is intersecting
 					}
-					return true;
+					return res;
 				}
 			};
+
+			inline mat3 make_basis(vec3 d) {
+				mat3 m;
+				m[0] = normalize(d);
+				vec3 t = (abs(m[0].x) > 0.1f) ? vec3(0, 1, 0) : vec3(1, 0, 0);
+				m[1] = normalize(cross(t, m[0]));
+				m[2] = cross(m[0], m[1]);
+				return m;
+			}
 		}
 		//full_screen_quad_shader
 		//Renders a FSQ with the pixel shader given
@@ -153,17 +175,21 @@ namespace gluk
 			void draw(float t);
 		};
 
-		class camera
+		class camera 
 		{
+		protected:
 			mat4 _view, _proj;
-			float _fov, _nz, _fz;
 			vec3 _pos, _look, _up, _right;
 		public:
 			camera() {}
-			camera(vec2 ss, vec3 p, vec3 t, vec3 u = vec3(0.f, 1.f, 0.f), float fov = radians(45.f),
-				float nz = 0.5f, float fz = 500.f);
+			camera(vec3 p, vec3 t, vec3 u = vec3(0.f, 1.f, 0.f)) 
+				: _pos(p), _look(t-p), _up(u)
+			{
+				_right = cross(_up, _look);
+				update_view(); 
+			}
 
-			void update_proj(vec2 size);
+			virtual void update_proj(vec2 size) = 0;
 			void update_view();
 
 			inline void look_at(vec3 p, vec3 t, vec3 u)
@@ -174,15 +200,12 @@ namespace gluk
 			proprw(vec3, position, { return _pos; });
 			propr(vec3, position, { return _pos; });
 
-			propr(float, fov, { return _fov; });
-			proprw(float, near_z, { return _nz; });
-			proprw(float, far_z, { return _fz; });
+			propr(mat4, view, { return _view; });
+			propr(mat4, proj, { return _proj; });
 
 			propr(vec3, target, { return _pos + _look; });
 			inline void target(vec3 p) { _look = p - _pos; }
 
-			propr(mat4, view, { return _view; });
-			propr(mat4, proj, { return _proj; });
 
 			inline void fwd(float d) { _pos += d*_look; }
 			inline void straft(float d) { _pos += d*_right; }
@@ -194,26 +217,46 @@ namespace gluk
 			inline void pitch(float a) { transform(rotate(mat4(1), a, _right)); }
 			inline void roll(float a) { transform(rotate(mat4(1), a, _look)); }
 
-			tuple<vec3, vec3, vec3> basis()
+			mat3 basis() const
 			{
-				return tuple<vec3, vec3, vec3>(_look, _up, _right);
+				return mat3(_look, _up, _right);
 			}
 
-			inline math::frustrum make_frustrum() const {
-				return math::frustrum(_view, _proj);
+			virtual math::frustrum frustrum() const = 0;
+		};
+
+		class perspective_camera : public camera {
+			float _fov, _nz, _fz, _ar;
+		public:
+			perspective_camera(vec2 ss, vec3 p, vec3 t, vec3 u = vec3(0.f, 1.f, 0.f), float fov = radians(45.f),
+				float nz = 0.5f, float fz = 500.f);
+
+			propr(float, fov, { return _fov; });
+			propr(float, near_z, { return _nz; });
+			propr(float, far_z, { return _fz; });
+			proprw(float, near_z, { return _nz; });
+			proprw(float, far_z, { return _fz; });
+			propr(float, aspect_ratio, { return _ar; });
+
+			void update_proj(vec2 size) override;
+			
+			math::frustrum frustrum() const override {
+				return math::frustrum(_fov, _ar, _nz, _fz, _pos, basis());
 			}
 		};
+
+
 
 		struct fps_camera_controller : public input_handler {
 		protected:
 			vec3 cam_pos_v; vec2 cam_rot_v; vec2 tot_cam_rot; 
 		public:
-			camera& cam;
+			perspective_camera& cam;
 			vec3 linear_speed;
 			vec2 rotational_speed;
 			bool mouse_disabled;
 			uint normal_cursor_mode;
-			fps_camera_controller(camera& c, vec3 lin_speed = vec3(7.f, 10.f, 5.f), vec2 rot_speed = vec2(1.f)) 
+			fps_camera_controller(perspective_camera& c, vec3 lin_speed = vec3(7.f, 10.f, 5.f), vec2 rot_speed = vec2(1.f)) 
 				: cam(c), linear_speed(lin_speed), rotational_speed(rot_speed), mouse_disabled(false), normal_cursor_mode(GLFW_CURSOR_NORMAL) {
 			}
 

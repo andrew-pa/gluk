@@ -177,8 +177,11 @@ namespace gluk
 		{
 			GLint ix = -1;
 			auto ui = uniform_index_cache.find(id);
-			if(ui != uniform_index_cache.end())
+			if(ui != uniform_index_cache.end()) {
+				if (ui->second == -1) 
+					return; //wasn't found
 				ix = ui->second;
+			}
 			else
 			{
 				ix = glGetUniformLocation(_id, id.c_str());
@@ -188,6 +191,7 @@ namespace gluk
 					oss << "Can't find uniform: " << id;
 					if(!fail_on_nfind)
 					{
+						uniform_index_cache[id] = -1;
 						return;
 					}
 					throw new exception(oss.str().c_str());
@@ -201,8 +205,10 @@ namespace gluk
 		{
 			GLint ix = -1;
 			auto ui = uniform_index_cache.find(id);
-			if (ui != uniform_index_cache.end())
+			if (ui != uniform_index_cache.end()) {
+				if (ui->second == -1) return; //wasn't found
 				ix = ui->second;
+			}
 			else
 			{
 				ix = glGetUniformLocation(_id, id.c_str());
@@ -212,6 +218,7 @@ namespace gluk
 					oss << "Can't find uniform: " << id;
 					if (!fail_on_nfind)
 					{
+						uniform_index_cache[id] = -1;
 						return;
 					}
 					throw new exception(oss.str().c_str());
@@ -231,7 +238,7 @@ namespace gluk
 		}
 
 		template <int Dim, int AS = 1>
-		void set_texture(const string& id, const texture<Dim, AS>& tex, int slot, bool fail_on_not_found = false)
+		void set_texture(const string& id, texture<Dim, AS>& tex, int slot, bool fail_on_not_found = false)
 		{
 			tex.bind(slot);
 			set_uniform(id, slot, fail_on_not_found);

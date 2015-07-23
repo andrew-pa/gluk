@@ -63,6 +63,9 @@ namespace gluk
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, _wstencil ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _txid, 0);
 
+		glDrawBuffer(GL_NONE);
+		glReadBuffer(GL_NONE);
+
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
@@ -72,9 +75,9 @@ namespace gluk
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, rtc->_fbo);
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, cube_map_face_for_index(idx),
 			rtc->_txid, 0);
-		glViewport(_vp.offset.x, _vp.offset.y,
-			_vp.size.x < 0 ? dev->size().x : _vp.size.x,
-			_vp.size.y < 0 ? dev->size().y : _vp.size.y);
+		glViewport((GLint)_vp.offset.x, (GLint)_vp.offset.y,
+			(GLsizei)(_vp.size.x < 0 ? dev->size().x : _vp.size.x),
+			(GLsizei)(_vp.size.y < 0 ? dev->size().y : _vp.size.y));
 		glDepthRange(_vp.min_depth < 0 ? 0.f : _vp.min_depth,
 			_vp.max_depth < 0 ? 1.f : _vp.max_depth);
 

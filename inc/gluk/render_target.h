@@ -8,11 +8,11 @@ namespace gluk
 
 	struct viewport
 	{
-		vec2 offset;
-		vec2 size;
+		ivec2 offset;
+		uvec2 size;
 		float min_depth;
 		float max_depth;
-		viewport(vec2 si, vec2 os = vec2(0.), float md = 0.f, float xd = 1.f)
+		viewport(uvec2 si, ivec2 os = ivec2(0), float md = 0.f, float xd = 1.f)
 			: offset(os), size(si), min_depth(md), max_depth(xd){}
 		
 	};
@@ -142,11 +142,25 @@ namespace gluk
 			glDepthRange(_vp.min_depth < 0 ? 0.f : _vp.min_depth,
 				_vp.max_depth < 0 ? 1.f : _vp.max_depth);
 		}
+		virtual void clear()
+		{
+			glClear(GL_DEPTH_BUFFER_BIT);
+			if (_wstencil) glClear(GL_STENCIL_BITS);
+		}
 
 		void bind_for_read() override
 		{
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, _fbo);
+		}
+
+		void set_comparison_mode(GLenum f, GLenum mode = GL_COMPARE_REF_TO_TEXTURE) {
+			glTextureParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, mode);
+			glTextureParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, f);
+		}
+
+		void disable_comparison_mode() {
+			glTextureParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, 0);
 		}
 
 		inline viewport& mviewport() override { return _vp; }
@@ -218,7 +232,7 @@ namespace gluk
 			{
 				glBindTexture(GL_TEXTURE_2D, _tex[i]);
 				glTexImage2D(GL_TEXTURE_2D, 0, pf.get_gl_format_internal(),
-					vp.size.x, vp.size.y, 0, pf.get_gl_format(), pf.get_gl_type(), nullptr);
+					(GLsizei)vp.size.x, (GLsizei)vp.size.y, 0, pf.get_gl_format(), pf.get_gl_type(), nullptr);
 				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, _tex[i], 0);
 
 				_mtex[i] = new texture<2>(_tex[i], vp.size);
@@ -241,9 +255,9 @@ namespace gluk
 		void ombind(gluk::device* dev) override
 		{
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo);
-			glViewport(_vp.offset.x, _vp.offset.y,
-				_vp.size.x < 0 ? dev->size().x : _vp.size.x,
-				_vp.size.y < 0 ? dev->size().y : _vp.size.y);
+			glViewport((GLint)_vp.offset.x, (GLint)_vp.offset.y,
+				(GLsizei)(_vp.size.x < 0 ? dev->size().x : _vp.size.x),
+				(GLsizei)(_vp.size.y < 0 ? dev->size().y : _vp.size.y));
 			glDepthRange(_vp.min_depth < 0 ? 0.f : _vp.min_depth,
 				_vp.max_depth < 0 ? 1.f : _vp.max_depth);
 		}
@@ -264,7 +278,7 @@ namespace gluk
 			return _tex[i];
 		}
 
-		inline const texture<2>& get_texture(int i)
+		inline texture<2>& get_texture(int i)
 		{
 			return *_mtex[i];
 		}

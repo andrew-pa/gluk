@@ -89,7 +89,7 @@ namespace gluk {
 		void renderer2d::draw_string(vec2 offset, const wstring& str, font& fnt, const vec4& col) {
 			uint previous = 0;
 			vec2 pen = offset;			
-			
+			float line_blext = -numeric_limits<float>::infinity();
 			uint tid = 0;
 			auto f = find_if(textures.begin(), textures.end(), [&](GLuint v) {
 				return v = fnt.atlas->id;
@@ -104,12 +104,19 @@ namespace gluk {
 			}
 
 			for (int i = 0; i < str.length(); ++i) {
+				if(str[i] == '\n') {
+					pen.x = offset.x;
+					pen.y -= line_blext*1.1f;
+					line_blext = -numeric_limits<float>::infinity();
+					continue;
+				}
 				freetype_gl::texture_glyph_t* gly =
 					freetype_gl::texture_font_get_glyph(fnt.fnt, str[i]);
 				if(gly != nullptr) {
 					pen.x += (i>0) ?
 						freetype_gl::texture_glyph_get_kerning(gly, str[i - 1]) : 0.f;
-					quads.push_back(quad_instance(pen + vec2(gly->offset_x, -2.f*((float)gly->height-gly->offset_y)),
+					line_blext = glm::max(line_blext, 2.f*(float)gly->height);
+					quads.push_back(quad_instance(pen + vec2(gly->offset_x, -2.f*((float)gly->height - gly->offset_y)),
 						vec2(gly->width, gly->height), vec4(gly->s0, gly->t0, gly->s1-gly->s0, gly->t1-gly->t0), col, tid, true));
 					pen.x += gly->advance_x*2.f;
 				}
@@ -128,6 +135,12 @@ namespace gluk {
 			}
 			quad->update_instance_buffer(quads);
 			quad->draw(prim_draw_type::triangle_list, quads.size());
+			i = 0;
+			for (const auto& t : textures) {
+				glActiveTexture(GL_TEXTURE0 + i);
+				glBindTexture(GL_TEXTURE_2D, 0);
+				i++;
+			}
 			quads.clear();
 			textures.clear();
 		}
