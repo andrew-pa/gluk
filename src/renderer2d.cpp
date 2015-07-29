@@ -92,7 +92,7 @@ namespace gluk {
 			float line_blext = -numeric_limits<float>::infinity();
 			uint tid = 0;
 			auto f = find_if(textures.begin(), textures.end(), [&](GLuint v) {
-				return v = fnt.atlas->id;
+				return v == fnt.atlas->id;
 			});
 			if (f == textures.end()) {
 				if (textures.size() >= 32) flush();
