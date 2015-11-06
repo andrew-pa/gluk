@@ -18,7 +18,9 @@
 #include <chrono>
 #include <thread>
 #include <memory>
+#ifndef MINGW
 #include <codecvt>
+#endif
 using namespace std;
 
 #define proprw(t, n, gc) inline t& n() gc
@@ -133,11 +135,11 @@ namespace gluk
 
 	//error_code_exception
 	// exception the resulted from a error code that is failing
-	struct error_code_exception : public exception
+	struct error_code_exception 
 	{
 	public:
 		uint errorcode;
-		error_code_exception(uint ec, const string& m = "") : errorcode(ec), exception(m.c_str()) { }
+		error_code_exception(uint ec, const string& m = "") : errorcode(ec)) { }
 	};
 
 	/* BAD BAD BAD! DON'T USE!
@@ -187,7 +189,7 @@ namespace gluk
 	{
 		return vector<byte>(d, d + s);
 	}
-
+#ifndef MINGW
 	inline wstring s2ws(const std::string& str)
 	{
 		typedef std::codecvt_utf8<wchar_t> convert_typeX;
@@ -203,6 +205,19 @@ namespace gluk
 
 		return converterX.to_bytes(wstr);
 	}
+#else
+	inline wstring s2ws(const string& str) {
+		wstring ws(s.size(), L' ');
+		ws.resize(mbstowcs(&ws[0], str.c_str(), str.size()));
+		return ws;
+	}
+	inline string ws2s(const wstring& str) {
+		string s(ws.size(), ' ');
+		s.resize(wcstombs(&s[0], s.c_str(), s.size()));
+		return s;
+	}
+#endif
+
 
 	class filedata;
 	class package
