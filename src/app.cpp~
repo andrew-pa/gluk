@@ -117,7 +117,7 @@ namespace gluk
 			{
 				auto missing_delta = target_delta_time - tm.delta_time();
 				if(missing_delta > 0.f)
-					Sleep(chrono::milliseconds((long)ceil(missing_delta)).count());
+					Sleep(chrono::milliseconds((long)ceil(missing_delta)));
 			}
 		}
 	}

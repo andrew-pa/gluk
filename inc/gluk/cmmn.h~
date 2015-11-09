@@ -137,7 +137,7 @@ namespace gluk
 	struct rexception : public exception {
 		string why;
 		rexception(const string& s) : why(s) {} 
-	};
+	}
 	//error_code_exception
 	// exception the resulted from a error code that is failing
 	struct error_code_exception : public rexception

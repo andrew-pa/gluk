@@ -7,12 +7,19 @@ if( CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR )
   message(FATAL_ERROR "Yo! Out of Source builds only!")
 endif()
 
-set(GLOBAL_DEFINES "-DUNICODE -D_UNICODE") #make sure we use unicode
+if(MINGW)
+	set(GLOBAL_DEFINES "-DMINGW")
+endif()
+
+set(GLOBAL_DEFINES "${GLOBAL_DEFINES} -DUNICODE -D_UNICODE") #make sure we use unicode
 
 find_package(OpenGL REQUIRED)
 
 set(SHARE_DIR Source/share)
 include("$ENV{HOMEDRIVE}$ENV{HOMEPATH}/${SHARE_DIR}/CMakeSetup.txt" OPTIONAL RESULT_VARIABLE SHR_RES)
+if(SHR_RES STREQUAL NOTFOUND)
+include($ENV{SHARE_DIR}/CMakeSetup.txt OPTIONAL RESULT_VARIABLE SHR_RES)
+endif()
 
 if(SHR_RES STREQUAL NOTFOUND)
   #old, questionable way of doing things
@@ -37,6 +44,8 @@ add_library(gluk ${SOURCES})
 add_executable(test_gluk test_gluk.cpp)
 target_link_libraries(test_gluk gluk ${OPENGL_LIBRARIES}
 ${SHARE_LIBDIR}/glfw3dll.lib ${SHARE_LIBDIR}/glew32.lib ${SHARE_LIBDIR}/freetype.lib ${SHARE_LIBDIR}/SOIL.lib)
+set_property(TARGET gluk PROPERTY CXX_STANDARD 14)
+set_property(TARGET test_gluk PROPERTY CXX_STANDARD 14)
 file(GLOB SHADERS src/*.glsl)
 message("S" ${SHADERS})
 file(TO_NATIVE_PATH ${PROJECT_BINARY_DIR}/$<CONFIG> NATIVE_SHADER_OUT_DIR)
