@@ -36,15 +36,18 @@ else()
 endif()
 
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc/gluk)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc/gluk ${CMAKE_CURRENT_SOURCE_DIR}/inc/soil)
 add_definitions(${GLOBAL_DEFINES})
+
+file(GLOB SOIL_SRC src/soil/* inc/soil/*)
+add_library(SOIL ${SOIL_SRC})
 
 file(GLOB SOURCES src/*.cpp inc/*/*.h)
 
 add_library(gluk ${SOURCES})
 add_executable(test_gluk test_gluk.cpp)
 if(SHR_RES)
-	target_link_libraries(test_gluk gluk ${OPENGL_LIBRARIES} ${SHARE_LIBDIR}/glfw3dll.lib ${SHARE_LIBDIR}/glew32.lib ${SHARE_LIBDIR}/freetype.lib ${SHARE_LIBDIR}/SOIL.lib)
+	target_link_libraries(test_gluk gluk ${OPENGL_LIBRARIES} ${SHARE_LIBDIR}/glfw3dll.lib ${SHARE_LIBDIR}/glew32.lib ${SHARE_LIBDIR}/freetype.lib SOIL)
 else()
 	target_link_libraries(test_gluk gluk ${OPENGL_LIBRARIES} glfw3 glew32 freetype SOIL)
 endif()
