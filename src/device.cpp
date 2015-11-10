@@ -40,7 +40,7 @@ namespace gluk
 		if (sev == GL_DEBUG_SEVERITY_HIGH)
 		{
 			OutputDebugStringA(("GL error: " + oss.str()).c_str());
-			throw exception(("GL error: " + oss.str()).c_str());
+			throw rexception(("GL error: " + oss.str()).c_str());
 		}
 		else
 			OutputDebugStringA(oss.str().c_str());
@@ -186,7 +186,7 @@ namespace gluk
 			oss << "Compilation Log:" << endl << log << endl;
 			OutputDebugStringA(oss.str().c_str());
 			glDeleteShader(sh);
-			throw exception(oss.str().c_str());
+			throw rexception(oss.str().c_str());
 		}
 		return sh;
 	}

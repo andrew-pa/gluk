@@ -147,7 +147,11 @@ public:
 
 		const vec2 fps_pos = vec2(15.f, 30.f);
 		wchar_t fps_str[15];
+#ifdef _MSC_VER > 0
 		swprintf(fps_str, 15, L"FPS: %f", 1.f / dt);
+#else
+		wprintf(fps_str, L"FPS: %f", 1.f / dt);
+#endif
 		rndr2d.draw_string(fps_pos, fps_str, fnt, vec4(1.f, 0.5f, 0.f, 1.f));
 		//rndr2d.draw_rect(vec2(500.f), dev->size()*.22f, vec4(1.f), drtx);
 	

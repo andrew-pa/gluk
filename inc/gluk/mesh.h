@@ -220,7 +220,7 @@ namespace gluk
 		GLuint instance_buf;
 	public:
 		instanced_interleaved_mesh(const vector<vertex_type>& vs, const vector<index_type>& is)
-			: interleaved_mesh(vs, is)
+			: interleaved_mesh<vertex_type,index_type>(vs, is)
 		{
 			glGenBuffers(1, &instance_buf);
 			glBindBuffer(GL_ARRAY_BUFFER, instance_buf);
@@ -246,17 +246,17 @@ namespace gluk
 		void draw(prim_draw_type dt = prim_draw_type::triangle_list,
 			int index_offset = 1, int oindex_count = -1, int vertex_offset = 0) override
 		{
-			glBindVertexArray(vtx_array);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idx_buf);
-			glDrawElementsInstancedBaseVertex((GLenum)dt, oindex_count != -1 ? oindex_count : idx_cnt, gl_type_for_index_type<index_type>::value, (void*)0,
+			glBindVertexArray(this->vtx_array);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->idx_buf);
+			glDrawElementsInstancedBaseVertex((GLenum)dt, oindex_count != -1 ? oindex_count : this->idx_cnt, gl_type_for_index_type<index_type>::value, (void*)0,
 				index_offset, vertex_offset);
 		}
+
 
 		~instanced_interleaved_mesh() {
 			glDeleteBuffers(1, &instance_buf);
 		}
 	};
-
 	struct multistream_mesh_stream_desc {
 		void* data;
 		size_t size;

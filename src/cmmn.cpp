@@ -130,10 +130,14 @@ namespace gluk
 		: _wfile(_wf), _wfm(nullptr)
 	{
 		LARGE_INTEGER fs;
+#if _MSC_VER > 0
 		if (!GetFileSizeEx(_wfile, &fs))
 		{
 			throw error_code_exception(GetLastError(), "GetFileSizeEx failed");
 		}
+#else
+		fs.LowPart = GetFileSize(_wfile, (PDWORD)&fs.HighPart);
+#endif
 		_ln = fs.QuadPart;
 		
 		_wfm = CreateFileMapping(_wfile, nullptr, rw ? PAGE_READWRITE : PAGE_READONLY, 0, 0, nullptr);
@@ -221,7 +225,7 @@ namespace gluk
 			throw error_code_exception(e, "GL error");
 		}
 	}
-
+#if _MSC_VER > 0
 #define GL_PX_FMT(C, T, D) GL_##C##D##T
 #define ct(X) if(type == pixel_type::##X )
 	GLenum pixel_format::get_gl_format_internal() const
@@ -431,4 +435,7 @@ namespace gluk
 		}
 		throw;
 	}
+#else
+#include "..\src\pix_format.i"
+#endif
 };
