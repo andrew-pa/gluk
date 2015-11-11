@@ -114,9 +114,11 @@ typedef unsigned char validate_uint32[sizeof(uint32)==4];
 // Generic API that works on all image types
 //
 
+#ifdef MINGW
 void fopen_s(FILE** f, const char* c, const char* m) {
 	*f = fopen(c, m);
 }
+#endif
 
 // this is not threadsafe
 static char *failure_reason;

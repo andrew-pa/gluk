@@ -44,7 +44,7 @@ public:
 		: app("test", vec2(640, 480), 1),
 		s(dev, default_package, "basic.vs.glsl", "basic.ps.glsl"), ns(dev, default_package, "basic.vs.glsl"),//default_package.open("basic.vs.glsl"), default_package.open("basic.ps.glsl")),
 		//s(read_data_from_package(L"basic.1vs.glsl"), read_data_from_package(L"basic.ps.glsl")),
-		tex(default_package.open("test.tga"))//gli::texture2D(gli::load_dds("test.dds")))
+		tex(default_package.open("test.bmp"))//gli::texture2D(gli::load_dds("test.dds")))
 		, clear_color(0.1f, 0.3f, 0.8f, 1.f), cam(dev->size(), vec3(0.01f, 3.f, -7.f), vec3(0.f), vec3(0.f, 1.f, 0.f)),
 		fpscamcntrl(make_shared<util::fps_camera_controller>(cam)), rndr2d(dev, default_package),
 		fnt(rndr2d, "C:\\Windows\\Fonts\\segoeui.ttf", 32.f), drtx(new depth_render_texture2d(viewport(dev->size())))
@@ -89,13 +89,6 @@ public:
 
 		input_handlers.push_back(this);
 		input_handlers.push_back(fpscamcntrl.get());
-
-		auto t = texture_cube(default_package, { "citadella2\\posx.jpg", 
-											     "citadella2\\negx.jpg", 
-												 "citadella2\\posy.jpg", 
-												 "citadella2\\negy.jpg", 
-												 "citadella2\\posz.jpg",
-												 "citadella2\\negz.jpg" });
 	}
 
 	vec4 clear_color;
@@ -153,7 +146,7 @@ public:
 		wprintf(fps_str, L"FPS: %f", 1.f / dt);
 #endif
 		rndr2d.draw_string(fps_pos, fps_str, fnt, vec4(1.f, 0.5f, 0.f, 1.f));
-		//rndr2d.draw_rect(vec2(500.f), dev->size()*.22f, vec4(1.f), drtx);
+		rndr2d.draw_rect(vec2(500.f), dev->size()*.22f, vec4(1.f), &tex);
 	
 		rndr2d.draw_string(vec2(20.f, 640.f), L"the quick brown fox\njumps over the\nlazy dog", fnt, vec4(1.f, .5f, .0f, 1.f));
 		//rndr2d.draw_string(vec2(20.f, 440.f), L"THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG )!@#$%^&*(", fnt, vec4(1.f, 0.5f, 0.f, 1.f));
