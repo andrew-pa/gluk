@@ -11,7 +11,7 @@ namespace gluk
 		glfwSetErrorCallback([](int ec, const char* em){ char s[64]; sprintf(s, "GLFW error: %s, (error code: %08X)", em, ec);  OutputDebugStringA(s); });
 		if(aa_samples >= 1) glfwWindowHint(GLFW_SAMPLES, aa_samples);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);	
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		apply_window_hints();
