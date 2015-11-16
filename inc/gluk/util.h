@@ -257,7 +257,7 @@ namespace gluk
 			bool mouse_disabled;
 			uint normal_cursor_mode;
 			fps_camera_controller(perspective_camera& c, vec3 lin_speed = vec3(7.f, 10.f, 5.f), vec2 rot_speed = vec2(1.f)) 
-				: cam(c), linear_speed(lin_speed), rotational_speed(rot_speed), mouse_disabled(false), normal_cursor_mode(GLFW_CURSOR_NORMAL) {
+				: cam(c), linear_speed(lin_speed), rotational_speed(rot_speed), mouse_disabled(false), normal_cursor_mode(GLFW_CURSOR_NORMAL)  {
 			}
 
 			virtual void key_handler(app* _app, uint key, input_action action, input_mod mods) {
@@ -266,7 +266,9 @@ namespace gluk
 					if (glfwGetInputMode(_app->wnd, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
 						glfwSetInputMode(_app->wnd, GLFW_CURSOR, normal_cursor_mode);
 				}
-
+				if(key == GLFW_KEY_F2 && action == input_action::release) {
+					cam.look_at(vec3(0.f, 2.f, 5.f), vec3(0.f, 0.f, 0.f), vec3(0.f, 1.f, 0.f));		
+				}
 				if (action == key_action::press)
 				{
 					if (key == GLFW_KEY_W)

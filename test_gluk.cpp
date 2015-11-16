@@ -42,9 +42,9 @@ class test_app : public app, public input_handler
 public:
 	test_app()
 		: app("test", vec2(640, 480), 1),
-		s(dev, default_package, "basic.vs.glsl", "basic.ps.glsl"), ns(dev, default_package, "basic.vs.glsl"),//default_package.open("basic.vs.glsl"), default_package.open("basic.ps.glsl")),
-		//s(read_data_from_package(L"basic.1vs.glsl"), read_data_from_package(L"basic.ps.glsl")),
-		tex(default_package.open("test.bmp"))//gli::texture2D(gli::load_dds("test.dds")))
+		s(dev, default_package, "basic.vs.glsl", "basic.ps.glsl"),
+	        ns(dev, default_package, "basic.vs.glsl"),
+		tex(default_package.open("test.png"))
 		, clear_color(0.1f, 0.3f, 0.8f, 1.f), cam(dev->size(), vec3(0.01f, 3.f, -7.f), vec3(0.f), vec3(0.f, 1.f, 0.f)),
 		fpscamcntrl(make_shared<util::fps_camera_controller>(cam)), rndr2d(dev, default_package),
 		fnt(rndr2d, "C:\\Windows\\Fonts\\segoeui.ttf", 32.f), drtx(new depth_render_texture2d(viewport(dev->size())))
@@ -132,7 +132,7 @@ public:
 		s.set_texture("tex", tex, 2);
 		torus->draw();
 
-		s.set_uniform("world", mat4(1.f));
+		s.set_uniform("world", translate(mat4(1), vec3(sin(t*0.3f)*3.f, 0.f, cos(t*0.3f)*3.f)));
 		sphere->draw();
 		tex.unbind();
 
@@ -143,14 +143,14 @@ public:
 #ifdef _MSC_VER > 0
 		swprintf(fps_str, 15, L"FPS: %f", 1.f / dt);
 #else
-		wprintf(fps_str, L"FPS: %f", 1.f / dt);
+		swprintf(fps_str, L"FPS: %f", 1.f / dt);
 #endif
 		rndr2d.draw_string(fps_pos, fps_str, fnt, vec4(1.f, 0.5f, 0.f, 1.f));
-		rndr2d.draw_rect(vec2(500.f), dev->size()*.22f, vec4(1.f), &tex);
+		rndr2d.draw_rect(vec2(500.f), dev->size()*.22f, vec4(1.f), drtx);
 	
 		rndr2d.draw_string(vec2(20.f, 640.f), L"the quick brown fox\njumps over the\nlazy dog", fnt, vec4(1.f, .5f, .0f, 1.f));
-		//rndr2d.draw_string(vec2(20.f, 440.f), L"THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG )!@#$%^&*(", fnt, vec4(1.f, 0.5f, 0.f, 1.f));
-		//rndr2d.draw_string(vec2(20.f, 640.f), L"~`_-+={[}]|\\<,>.?/", fnt, vec4(1.f, 0.5f, 0.f, 1.f));
+		rndr2d.draw_string(vec2(20.f, 440.f), L"THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG )!@#$%^&*(", fnt, vec4(1.f, 0.5f, 0.f, 1.f));
+		rndr2d.draw_string(vec2(20.f, 640.f), L"~`_-+={[}]|\\<,>.?/", fnt, vec4(1.f, 0.5f, 0.f, 1.f));
 
 		rndr2d.end_draw();
 	}
