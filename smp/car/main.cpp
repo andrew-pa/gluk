@@ -11,6 +11,57 @@ using namespace gluk;
 
 #include <memory>
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+
+inline vec3 to_glm3(const aiVector3D& v) { return vec3(v.x, v.y, v.z); }
+inline vec2 to_glm2(const aiVector3D& v) { return vec2(v.x, v.y); }
+inline vec3 to_glm3(const aiColor3D& v) { return vec3(v.r, v.g, v.b); }
+inline vec4 to_glm4(const aiColor4D& v) { return vec4(v.r, v.g, v.b, v.a); }
+
+struct model_part {
+	mat4 world;
+	shared_ptr<mesh> msh;
+	vec3 diffuse_color;
+	vec3 specular_color; float shininess;
+	shared_ptr<texture2d> tex;
+
+	model_part(aiScene* sc, uint32_t idx, const package& pak) {
+		auto mh = sc->mMeshes[idx];
+
+		auto mat = sc->mMaterials[mh->mMaterialIndex];
+		aiColor3D c;
+		mat->Get(AI_MATKEY_COLOR_DIFFUSE, c);
+		diffuse_color = to_glm3(c);
+		mat->Get(AI_MATKEY_COLOR_SPECULAR, c);
+		specular_color = to_glm3(c);
+		mat->Get(AI_MATKEY_SHININESS, shininess);
+		aiString pth;
+		if(mat->GetTexture(aiTextureType_DIFFUSE, 0, &pth) == aiReturn_SUCCESS) {
+			tex = make_shared<texture2d>(pak.open(pth.C_Str()));
+		}
+
+		vector<uint32_t> is;
+		for(int ix = 0; ix < mh->mNumFaces; ++ix) 
+			for(int jx = 0; jx < mh->mFaces[ix].mNumIndices; ++jx) 
+				is.push_back(mh->mFaces[ix].mIndices[jx]);
+
+		vector<multistream_mesh_stream_desc> descs;
+		if(mh->HasPositions()) {
+			descs.push_back(multistream_mesh_stream_desc(mh->mVertices, mh->mNumVertices*sizeof(aiVector3D), 3, GL_FLOAT));
+		}
+	}
+
+	void draw(const mat4& lw, shader& s) {
+		s.set_uniform("world", lw*world);
+		s.set_uniform("diffuse_color", diffuse_color);
+		s.set_texture("diffuse_texture", *tex.get(), 0);
+		msh->draw();
+	}
+};
+
 static package sample_package = package(SMP_PATH);
 
 struct simple_app : public app, public input_handler {
@@ -27,8 +78,8 @@ struct simple_app : public app, public input_handler {
 	unique_ptr<util::full_screen_quad_shader> postprocess_s;
 
 	simple_app() : 
-		app("simple app", vec2(800, 600), 1),
-		media_package(sample_package, "simple/"),
+		app("car viewer", vec2(800, 600), 1),
+		media_package(sample_package, "car/"),
 		s(new shader(dev, media_package, "basic.vs.glsl", "basic.ps.glsl")),
 		postprocess_s(new util::full_screen_quad_shader(dev, media_package.open("postprocess.ps.glsl"))),
 		cam(dev->size(), vec3(0.01, 3.f, -7.f), vec3(0.f), vec3(0.f, 1.f, 0.f)),
