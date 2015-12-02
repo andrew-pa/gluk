@@ -7,6 +7,8 @@ in vec2 texc;
 out vec4 color;
 
 uniform vec3 diffuse_color;
+uniform vec3 specular_color = vec3(1.0);
+uniform float shininess = 60.0;
 
 uniform vec3 light_direction;
 uniform vec3 camera_position;
@@ -22,6 +24,6 @@ void main() {
 	vec3 h = normalize(light_direction+v);
 	float ndh = pdp(norm_w, h);
 	vec3 Kd = diffuse_color * ndl + diffuse_color*pow(1.-ndv, 5.);
-	vec3 Ks = vec3(1.f) * pow(ndh, 60.f);
+	vec3 Ks = specular_color * pow(ndh, shininess);
 	color = vec4(Kd+Ks, 1.f);
 }

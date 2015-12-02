@@ -13,7 +13,7 @@ namespace gluk
 			ostringstream oss;
 			oss << "Shader " << shader << " (" << ")" << " error: " << buf;
 			OutputDebugStringA(oss.str().c_str());
-			throw rexception(oss.str().c_str());
+		//	throw rexception(oss.str().c_str());
 		}
 	}
 

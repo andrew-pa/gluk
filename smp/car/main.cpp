@@ -28,7 +28,8 @@ struct model_part {
 	vec3 specular_color; float shininess;
 	shared_ptr<texture2d> tex;
 
-	model_part(aiScene* sc, uint32_t idx, const package& pak) {
+	model_part(const aiScene* sc, uint32_t idx, const package& pak) : world(1) {
+		
 		auto mh = sc->mMeshes[idx];
 
 		auto mat = sc->mMaterials[mh->mMaterialIndex];
@@ -51,13 +52,30 @@ struct model_part {
 		vector<multistream_mesh_stream_desc> descs;
 		if(mh->HasPositions()) {
 			descs.push_back(multistream_mesh_stream_desc(mh->mVertices, mh->mNumVertices*sizeof(aiVector3D), 3, GL_FLOAT));
-		}
+			if(mh->HasNormals()) {
+				descs.push_back(multistream_mesh_stream_desc(mh->mNormals, mh->mNumVertices*sizeof(aiVector3D), 3, GL_FLOAT));
+				if(mh->HasTextureCoords(0)) {
+					unique_ptr<vec2> texc = unique_ptr<vec2>(new vec2[mh->mNumVertices]);
+					for(int i = 0; i < mh->mNumVertices; ++i) texc.get()[i] = to_glm2(mh->mTextureCoords[0][i]);
+					descs.push_back(multistream_mesh_stream_desc(texc.get(), mh->mNumVertices*sizeof(vec2), 2, GL_FLOAT));
+					if(mh->HasTangentsAndBitangents()) {
+						descs.push_back(multistream_mesh_stream_desc(mh->mTangents, mh->mNumVertices*sizeof(aiVector3D), 3, GL_FLOAT));
+						msh = make_shared<multistream_mesh<uint32, vec3, vec3, vec2, vec3>>(is, descs);
+					}
+					else msh = make_shared<multistream_mesh<uint32, vec3, vec3, vec2>>(is, descs);
+				}
+				else msh = make_shared<multistream_mesh<uint32, vec3, vec3>>(is, descs);
+			} 
+			else msh = make_shared<multistream_mesh<uint32, vec3>>(is, descs);
+		} else throw;
 	}
 
 	void draw(const mat4& lw, shader& s) {
 		s.set_uniform("world", lw*world);
 		s.set_uniform("diffuse_color", diffuse_color);
-		s.set_texture("diffuse_texture", *tex.get(), 0);
+		s.set_uniform("specular_color", specular_color);
+		s.set_uniform("shininess", shininess);
+		if(tex) s.set_texture("diffuse_texture", *tex.get(), 0);
 		msh->draw();
 	}
 };
@@ -68,6 +86,7 @@ struct simple_app : public app, public input_handler {
 	package media_package;
 
 	mesh *torus, *sphere, *floor;
+	vector<unique_ptr<model_part>> car;
 		
 	unique_ptr<shader> s;
 	util::perspective_camera cam;
@@ -92,6 +111,13 @@ struct simple_app : public app, public input_handler {
 				generate_sphere<vertex_position_normal_texture, uint32>(1.f, 32, 32));
 		floor = new interleaved_mesh<vertex_position_normal_texture, uint32>(
 				generate_plane<vertex_position_normal_texture, uint32>(vec2(16.f), vec2(8.f), vec3(0.f, -1.f, 0.f)));	
+		
+		Assimp::Importer imp;
+		auto scn = imp.ReadFile(media_package.path_of("dodge_challenger\\car.fbx"), aiProcessPreset_TargetRealtime_Fast);
+		for(int i = 0; i < scn->mNumMeshes; ++i)
+		       car.push_back(unique_ptr<model_part>(
+				new model_part(scn, i, media_package)));
+		
 		fpscamctrl = new util::fps_camera_controller(cam);
 		input_handlers.push_back(fpscamctrl);
 		input_handlers.push_back(this);
@@ -140,6 +166,10 @@ struct simple_app : public app, public input_handler {
 		s->set_uniform("world", translate(mat4(1), vec3(2.f, 1.f, 0.f)));
 		s->set_uniform("diffuse_color", vec3(0.3f, 0.6f, 0.8f));
 		sphere->draw();
+
+		mat4 ct = translate(mat4(1), vec3(2.f, 1.f, 4.f));
+		for(auto& p : car) p->draw(ct, *s);
+		
 		dev->pop_render_target();
 		postprocess_s->bind();
 		postprocess_s->set_texture("backbuffer", *intrm, 0);
