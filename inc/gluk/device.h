@@ -25,7 +25,7 @@ namespace gluk
 		void delete_shader(GLint id);
 		friend class shader;
 	public:
-		device(vec2 s_, GLFWwindow* w_, uint aal);
+		device(vec2 s_, GLFWwindow* w_, uint aal, int frames_before_swap = 0);
 		~device();
 		render_target* current_render_target() const;
 		void pop_render_target(bool clear = true);

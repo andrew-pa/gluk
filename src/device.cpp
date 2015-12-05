@@ -46,7 +46,7 @@ namespace gluk
 			OutputDebugStringA(oss.str().c_str());
 	}
 
-	device::device(vec2 s_, GLFWwindow* w_, uint aal)
+	device::device(vec2 s_, GLFWwindow* w_, uint aal, int fbfs)
 		: _rtsize(s_), next_uniform_buffer_bind_index(0),
 		wnd(w_)
 	{
@@ -82,6 +82,7 @@ namespace gluk
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
+		glfwSwapInterval(fbfs);
 		glClearColor(0.2f, 0.2f, 0.2f, 1.f);
 		glerr
 	}

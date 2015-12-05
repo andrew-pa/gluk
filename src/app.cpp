@@ -8,7 +8,7 @@ namespace gluk
 	{
 		glerr
 		if (!glfwInit()) throw rexception("GLFW init failed!");
-		glfwSetErrorCallback([](int ec, const char* em){ char s[64]; sprintf(s, "GLFW error: %s, (error code: %08X)", em, ec);  OutputDebugStringA(s); });
+		glfwSetErrorCallback([](int ec, const char* em) { char s[64]; sprintf(s, "GLFW error: %s, (error code: %08X)", em, ec);  OutputDebugStringA(s); DebugBreak(); });
 		if(aa_samples >= 1) glfwWindowHint(GLFW_SAMPLES, aa_samples);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);	
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -31,8 +31,6 @@ namespace gluk
 			glfwTerminate();
 			throw rexception("GLFW window creation failed");
 		}
-
-		glfwSwapInterval(1);
 	
 		glfwSetWindowUserPointer(wnd, this);
 
