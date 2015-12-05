@@ -186,8 +186,9 @@ namespace gluk
 			oss << "Shader " << sh << " [@ " << path << "]" << " failed to compile!" << endl;
 			oss << "Compilation Log:" << endl << log << endl;
 			OutputDebugStringA(oss.str().c_str());
-			glDeleteShader(sh);
-			throw rexception(oss.str().c_str());
+			cout << oss.str();
+	//		glDeleteShader(sh);
+	//		throw rexception(oss.str().c_str());
 		}
 		return sh;
 	}

@@ -137,6 +137,9 @@ namespace gluk
 	struct rexception : public exception {
 		string why;
 		rexception(const string& s) : why(s) {} 
+		inline const char * what() const _GLIBCXX_USE_NOEXCEPT override 		{
+			return why.c_str();
+		}
 	};
 	//error_code_exception
 	// exception the resulted from a error code that is failing

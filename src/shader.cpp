@@ -13,7 +13,7 @@ namespace gluk
 			ostringstream oss;
 			oss << "Shader " << shader << " (" << ")" << " error: " << buf;
 			OutputDebugStringA(oss.str().c_str());
-			throw rexception(oss.str().c_str());
+		//	throw rexception(oss.str().c_str());
 		}
 	}
 
@@ -59,7 +59,7 @@ namespace gluk
 			{
 				oss << "GL Program error: " << sbuf << endl;
 				OutputDebugStringA(oss.str().c_str());
-				throw rexception(oss.str().c_str());
+				//throw rexception(oss.str().c_str());
 			}
 		}
 		glerr
@@ -103,7 +103,7 @@ namespace gluk
 			{
 				oss << "GL Program error: " << sbuf << endl;
 				OutputDebugStringA(oss.str().c_str());
-				throw rexception(oss.str().c_str());
+				//throw rexception(oss.str().c_str());
 			}
 		}
 		glerr
@@ -133,7 +133,7 @@ namespace gluk
 			{
 				oss << "GL Program error: " << sbuf << endl;
 				OutputDebugStringA(oss.str().c_str());
-				throw rexception(oss.str().c_str());
+				//throw rexception(oss.str().c_str());
 			}
 		}
 	}
