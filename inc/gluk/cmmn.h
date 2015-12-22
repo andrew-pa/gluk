@@ -133,11 +133,16 @@ namespace gluk
 		};
 		return face[i];
 	}
-
+	
 	struct rexception : public exception {
 		string why;
 		rexception(const string& s) : why(s) {} 
-		inline const char * what() const _GLIBCXX_USE_NOEXCEPT override 		{
+		inline const char * what() const 
+#ifdef MINGW
+			_GLIBCXX_USE_NOEXCEPT
+#endif
+			override 
+		{
 			return why.c_str();
 		}
 	};
