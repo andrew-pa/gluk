@@ -76,7 +76,7 @@ namespace gluk
 		{
 		}
 		vertex_position_normal_texture(float px, float py, float pz, float nx, float ny, float nz, float tx = 0, float ty = 0, float tz = 0, float u = 0, float v = 0)
-			: pos(px, py, pz), norm(nx, ny, nz), tex(tx, ty){}
+			: pos(px, py, pz), norm(nx, ny, nz), tex(u, v){}
 
 		DEF_VERTEX_MC(vertex_position_normal_texture)
 			: pos(position), norm(normal), tex(texcoords) {}

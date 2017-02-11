@@ -133,7 +133,7 @@ namespace gluk
 		}
 		inline float xovery(vec2 v) { return v.x / v.y; }
 		math::frustrum::frustrum(const vec4& ortho_lrtb, vec2 ortho_nf, vec3 pos, mat3 basis) {
-			vec2 np = ortho_lrtb.zw() - ortho_nf.xy();
+			vec2 np = ortho_lrtb.zw - ortho_nf.xy;
 			float 
 				nh = np.x,
 				nw = np.y,

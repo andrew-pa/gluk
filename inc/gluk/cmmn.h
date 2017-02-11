@@ -26,8 +26,7 @@ using namespace std;
 #define proprw(t, n, gc) inline t& n() gc
 #define propr(t, n, gc) inline t n() const gc
 
-#define GLM_FORCE_RADIANS
-#define GLM_SWIZZLE
+#define GLM_FORCE_SWIZZLE
 #include <glm/glm.hpp>
 #include <glm/gtc/random.hpp>
 #include <glm/gtc/matrix_transform.hpp>
