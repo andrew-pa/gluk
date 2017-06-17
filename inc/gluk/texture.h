@@ -144,14 +144,6 @@ namespace gluk
 
 	class texture2d : public texture<2>
 	{
-		GLuint load_texture_with_SOIL(const filedatasp data)
-		{
-/*			unsigned char* d = new unsigned char[data->length()];
-			memcpy(d, data->data<void>(), data->length());
-			auto r = SOIL_load_OGL_texture_from_memory(d, data->length(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,0);
-			delete d;
-			return r;*/
-		}
 	public:
 		texture2d(const pixel_format& fmt, size_vec_t size_, void* data = nullptr)
 			: texture(size_)
@@ -225,9 +217,6 @@ namespace gluk
 			glTexImage2D(GL_TEXTURE_2D, 0, fmt, _size.x, _size.y, 0,
 				fmt, GL_UNSIGNED_BYTE, b);
 			glBindTexture(GL_TEXTURE_2D, 0);
-
-			//_txid = load_texture_with_SOIL(data);
-			//get_size_from_opengl();
 		}
 
 		texture2d(GLuint id)

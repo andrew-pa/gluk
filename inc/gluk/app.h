@@ -48,7 +48,8 @@ namespace gluk
 		app(const string& title, vec2 winsize, uint aa_samples,
 			const uvec4& colorbits = uvec4(8), uvec2 dsbits = uvec2(32,0), function<void()> apply_window_hints = function<void()>([&]{}));
 		~app();
-		void run();
+
+		void run(bool print_debug_fps = true);
 
 		virtual void render(float t, float dt) = 0;
 		virtual void update(float t, float dt) = 0;

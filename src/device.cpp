@@ -208,6 +208,17 @@ namespace gluk
 		}
 	}
 
+	void device::flush_shader_cashe(const string & path) {
+		if (path == "*") {
+			for (const auto& s : shader_cashe) flush_shader_cashe(s.first);
+		}
+		auto s = shader_cashe.find(path);
+		if(s != shader_cashe.end()) {
+			glDeleteShader(get<0>(s->second));
+			shader_cashe.erase(s);
+		}
+	}
+
 	void device::delete_shader(GLint id)
 	{
 		auto s = find_if(shader_cashe.begin(), shader_cashe.end(), [&](pair<string,tuple<GLint, int>> v)

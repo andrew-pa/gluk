@@ -84,7 +84,7 @@ namespace gluk
 		glerr
 	}
 
-	void app::run()
+	void app::run(bool pdfps)
 	{
 		const float target_delta_time = 1.f / 120.f;
 
@@ -100,7 +100,7 @@ namespace gluk
 			dev->present();
 			fc++;
 			ft += tm.delta_time();
-			if(ft >= 1.f)
+			if(ft >= 1.f && pdfps)
 			{
 				float fps = (float)fc;
 				float mpf = 1000.f / fps;

@@ -34,6 +34,7 @@ namespace gluk
 		void present();
 		void resize(vec2 ns);
 
+		void flush_shader_cashe(const string& path = "");
 
 		propr(vec2, size, { return _rtsize; })
 	};
