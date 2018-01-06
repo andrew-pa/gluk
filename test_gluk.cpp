@@ -46,7 +46,7 @@ public:
 	        ns(dev, default_package, "basic.vs.glsl"),
 		tex(default_package.open("test.png"))
 		, clear_color(0.1f, 0.3f, 0.8f, 1.f), cam(dev->size(), vec3(0.01f, 3.f, -7.f), vec3(0.f), vec3(0.f, 1.f, 0.f)),
-		fpscamcntrl(make_shared<util::fps_camera_controller>(cam)), rndr2d(dev, default_package),
+		fpscamcntrl(make_shared<util::fps_camera_controller>(&cam)), rndr2d(dev, default_package),
 		fnt(rndr2d, "C:\\Windows\\Fonts\\segoeui.ttf", 32.f), drtx(new depth_render_texture2d(viewport(dev->size())))
 	{
 

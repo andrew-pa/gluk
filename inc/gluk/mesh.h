@@ -264,6 +264,10 @@ namespace gluk
 		GLenum type;
 		multistream_mesh_stream_desc(void* d, size_t s, uint8 elsize, GLenum t) 
 			: data(d), size(s), element_size(elsize), type(t) {}
+
+		template<typename T>
+		multistream_mesh_stream_desc(vector<T> data, uint8 elsize, GLenum t)
+			: data(data.data()), size(data.size()), element_size(elsize), type(t) {}
 	};
 
 	template<typename index_type, typename... vertex_types> class multistream_mesh : public mesh {

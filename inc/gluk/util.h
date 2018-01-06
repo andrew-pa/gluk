@@ -251,13 +251,13 @@ namespace gluk
 		protected:
 			vec3 cam_pos_v; vec2 cam_rot_v; vec2 tot_cam_rot; 
 		public:
-			perspective_camera& cam;
+			perspective_camera* cam;
 			vec3 linear_speed;
 			vec2 rotational_speed;
 			bool mouse_disabled;
 			uint normal_cursor_mode;
-			fps_camera_controller(perspective_camera& c, vec3 lin_speed = vec3(7.f, 10.f, 5.f), vec2 rot_speed = vec2(1.f)) 
-				: cam(c), linear_speed(lin_speed), rotational_speed(rot_speed), mouse_disabled(false), normal_cursor_mode(GLFW_CURSOR_NORMAL)  {
+			fps_camera_controller(perspective_camera* c, vec3 lin_speed = vec3(7.f, 10.f, 5.f), vec2 rot_speed = vec2(1.f)) 
+				: cam(c), linear_speed(lin_speed), rotational_speed(rot_speed), mouse_disabled(false), normal_cursor_mode(GLFW_CURSOR_NORMAL), cam_pos_v(0.f), cam_rot_v(0.f), tot_cam_rot(0.f)  {
 			}
 
 			virtual void key_handler(app* _app, uint key, input_action action, input_mod mods) {
@@ -267,7 +267,7 @@ namespace gluk
 						glfwSetInputMode(_app->wnd, GLFW_CURSOR, normal_cursor_mode);
 				}
 				if(key == GLFW_KEY_F2 && action == input_action::release) {
-					cam.look_at(vec3(0.f, 2.f, 5.f), vec3(0.f, 0.f, 0.f), vec3(0.f, 1.f, 0.f));		
+					cam->look_at(vec3(0.f, 2.f, 5.f), vec3(0.f, 0.f, 0.f), vec3(0.f, 1.f, 0.f));		
 				}
 				if (action == key_action::press)
 				{
@@ -307,13 +307,13 @@ namespace gluk
 			}
 
 			void update(float t, float dt) {
-				cam.fwd(cam_pos_v.x*dt*linear_speed.x);
-				cam.straft(cam_pos_v.y*dt*linear_speed.y);
-				cam.move_up(cam_pos_v.z*dt*linear_speed.z);
-				cam.transform(rotate(mat4(1), cam_rot_v.x*dt*rotational_speed.x, vec3(0.f, 1.f, 0.f))); 
-				cam.pitch(cam_rot_v.y*dt*rotational_speed.y);
+				cam->fwd(cam_pos_v.x*dt*linear_speed.x);
+				cam->straft(cam_pos_v.y*dt*linear_speed.y);
+				cam->move_up(cam_pos_v.z*dt*linear_speed.z);
+				cam->transform(rotate(mat4(1), cam_rot_v.x*dt*rotational_speed.x, vec3(0.f, 1.f, 0.f))); 
+				cam->pitch(cam_rot_v.y*dt*rotational_speed.y);
 				cam_rot_v = vec2(0.f);
-				cam.update_view();
+				cam->update_view();
 			}
 		};
 
