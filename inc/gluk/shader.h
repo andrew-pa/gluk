@@ -121,7 +121,7 @@ namespace gluk
 			: _ix(block_index), _ad(dev)
 		{
 			if (_ix == GL_INVALID_INDEX)
-				throw rexception("Invalid uniform buffer index");
+				throw runtime_error("Invalid uniform buffer index");
 			glGenBuffers(1, &_buf);
 			glBindBuffer(GL_UNIFORM_BUFFER, _buf);
 			glBufferData(GL_UNIFORM_BUFFER, sizeof(T), nullptr, GL_DYNAMIC_DRAW);
@@ -194,7 +194,7 @@ namespace gluk
 						uniform_index_cache[id] = -1;
 						return;
 					}
-					throw rexception(oss.str().c_str());
+					throw runtime_error(oss.str().c_str());
 				}
 				uniform_index_cache[id] = ix;
 			}
@@ -221,7 +221,7 @@ namespace gluk
 						uniform_index_cache[id] = -1;
 						return;
 					}
-					throw rexception(oss.str().c_str());
+					throw runtime_error(oss.str().c_str());
 				}
 				uniform_index_cache[id] = ix;
 			}

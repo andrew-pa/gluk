@@ -1,6 +1,5 @@
 #pragma once
 
-//turn off stupid warnings
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <string>
@@ -26,13 +25,12 @@ using namespace std;
 #define proprw(t, n, gc) inline t& n() gc
 #define propr(t, n, gc) inline t n() const gc
 
+#define GLM_ENABLE_EXPERIMENTAL
 #define GLM_FORCE_SWIZZLE
 #include <glm/glm.hpp>
 #include <glm/gtc/random.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/integer.hpp>
-#include <glm/gtx/io.hpp>
-//#include <glm/gtc/type_precision.hpp>
 using namespace glm;
 
 #ifdef WIN32
@@ -55,20 +53,15 @@ extern "C"
 #define glerr
 //{auto err = glGetError(); if(err != 0) { char s[16]; sprintf(s, "GL Error: %08X\n", err); OutputDebugStringA(s); throw; }}
 
-//deal with stupid windows header and other fools
 #undef min
 #undef max
 
-
 namespace gluk
 {
-
 	inline float randf() { return ((float)rand() / (float)RAND_MAX); }
 	inline float randfn() { return ((randf() * 2) - 1); }
 
 #define array_size(ar) sizeof(ar) / sizeof(ar[0])
-
-//#define check_flag(f, v) (((uint)(v)&(uint)(f))==(uint)(f))
 
 	template <typename flag_type>
 	inline bool check_flag(flag_type check_for, flag_type in)
@@ -76,9 +69,7 @@ namespace gluk
 		return ((uint)in&(uint)check_for) == (uint)check_for;
 	}
 
-#ifndef WIN32
 	typedef unsigned char byte;
-#endif
 
 	enum class pixel_components
 	{
@@ -133,91 +124,20 @@ namespace gluk
 		return face[i];
 	}
 	
-	struct rexception : public exception {
-		string why;
-		rexception(const string& s) : why(s) {} 
-		inline const char * what() const 
-#ifdef MINGW
-			_GLIBCXX_USE_NOEXCEPT
-#endif
-			override 
-		{
-			return why.c_str();
-		}
-	};
 	//error_code_exception
 	// exception the resulted from a error code that is failing
-	struct error_code_exception : public rexception
+	struct error_code_exception : public runtime_error
 	{
 	public:
 		uint errorcode;
-		error_code_exception(uint ec, const string& m = "") : errorcode(ec), rexception(m) { }
+		error_code_exception(uint ec, const string& m = "") : errorcode(ec), runtime_error(m) { }
 	};
-
-	/* BAD BAD BAD! DON'T USE!
-
-	//datablob<T>
-	// pointer to a T along with the T's size, usually file data
-	template<typename T>
-	struct datablob
-	{
-		typedef T ElementType;
-		datablob() : data(nullptr), length(-1) { }
-		datablob(T* d, size_t l) : data(/*new T[l]d), length(l)
-		{
-			//memcpy(data, d, l*sizeof(T));
-		}
-		datablob(size_t l) : data(new T[l]), length(l) { }
-		datablob(const datablob<T>& o)
-			: length(o.length)
-		{
-					data = new T[o.length];
-					memcpy(data, o.data, o.length*sizeof(T));
-		}
-
-		~datablob()
-		{
-			if(data != nullptr)
-				delete data;
-			data = nullptr;
-			length = -1;
-		}
-
-		inline bool empty() const { return data == nullptr; }
-
-		T* data;
-		size_t length;
-	};
-
-
-	//Read in the data contained in filename, put it in to a datablob
-	const datablob<byte>& read_data(const wstring& filename);
-
-	//Wrapper for read_data, but adds the executable path on to the file name
-	const datablob<byte>& read_data_from_package(_In_ const wstring& filename);
-	*/
 
 	inline vector<byte> make_data_vector(const byte* d, size_t s)
 	{
 		return vector<byte>(d, d + s);
 	}
-#ifndef MINGW
-	inline wstring s2ws(const std::string& str)
-	{
-		typedef std::codecvt_utf8<wchar_t> convert_typeX;
-		std::wstring_convert<convert_typeX, wchar_t> converterX;
 
-		return converterX.from_bytes(str);
-	}
-
-	inline string ws2s(const std::wstring& wstr)
-	{
-		typedef std::codecvt_utf8<wchar_t> convert_typeX;
-		std::wstring_convert<convert_typeX, wchar_t> converterX;
-
-		return converterX.to_bytes(wstr);
-	}
-#else
 	inline wstring s2ws(const string& str) {
 		wstring ws(str.size(), L' ');
 		ws.resize(mbstowcs(&ws[0], str.c_str(), str.size()));
@@ -228,7 +148,6 @@ namespace gluk
 		s.resize(wcstombs(&s[0], str.c_str(), str.size()));
 		return s;
 	}
-#endif
 
 
 	class filedata;
@@ -337,5 +256,4 @@ namespace gluk
 	public:
 		typedef tvec4<T> x;
 	};
-
 };

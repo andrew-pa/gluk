@@ -40,7 +40,7 @@ namespace gluk
 		if (sev == GL_DEBUG_SEVERITY_HIGH)
 		{
 			OutputDebugStringA(("GL error: " + oss.str()).c_str());
-			throw rexception(("GL error: " + oss.str()).c_str());
+			throw runtime_error(("GL error: " + oss.str()).c_str());
 		}
 		else
 			OutputDebugStringA(oss.str().c_str());

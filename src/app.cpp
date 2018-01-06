@@ -7,7 +7,7 @@ namespace gluk
 	app::app(const string& title, vec2 winsize, uint aa_samples, const uvec4& colorbits, uvec2 dsbits, function<void()> apply_window_hints)
 	{
 		glerr
-		if (!glfwInit()) throw rexception("GLFW init failed!");
+		if (!glfwInit()) throw runtime_error("GLFW init failed!");
 		glfwSetErrorCallback([](int ec, const char* em) { char s[64]; sprintf(s, "GLFW error: %s, (error code: %08X)", em, ec);  OutputDebugStringA(s); DebugBreak(); });
 		if(aa_samples >= 1) glfwWindowHint(GLFW_SAMPLES, aa_samples);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);	
@@ -29,7 +29,7 @@ namespace gluk
 		if(!wnd)
 		{
 			glfwTerminate();
-			throw rexception("GLFW window creation failed");
+			throw runtime_error("GLFW window creation failed");
 		}
 	
 		glfwSetWindowUserPointer(wnd, this);
